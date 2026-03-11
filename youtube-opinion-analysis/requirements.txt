@@ -3,3 +3,12 @@ pandas
 numpy
 matplotlib
 scipy
+youtube-comment-downloader
+reportlab
+matplotlib
+tqdm
+pandas
+colorama
+wordcloud
+textblob
+openpyxl

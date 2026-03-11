@@ -9,10 +9,10 @@ import re
 # ===============================
 # 1. SET API KEY & VIDEO ID
 # ===============================
-API_KEY = "AIzaSyARKHtK_eexesOAIrUQ04xwDV8qKjQjtuw"
+API_KEY = "MASUKKAN_API_KEY_KAMU"
 VIDEO_ID = input("Masukkan Video ID YouTube: ")
 
-youtube = build('youtube', 'v3', developerKey="AIzaSyARKHtK_eexesOAIrUQ04xwDV8qKjQjtuw")
+youtube = build('youtube', 'v3', developerKey="MASUKKAN_API_KEY_KAMU")
 
 # ===============================
 # 2. SCRAPE KOMENTAR
