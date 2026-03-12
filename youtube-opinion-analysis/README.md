@@ -7,6 +7,7 @@ Simple Python script to scrape YouTube comments and perform basic sentiment anal
 
 Clone the repository:
 git clone https://github.com/USERNAME/REPOSITORY.git
+
 ------------------------------------------------------------------------------------------------------------------------------------------------
 
 Masuk ke folder project:
