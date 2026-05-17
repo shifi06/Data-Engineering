@@ -653,6 +653,7 @@
 // ═══════════════════════════════════════════════════════════
 // KONFIGURASI — Ganti URL ini setelah deploy Apps Script
 // ═══════════════════════════════════════════════════════════
+const USE_DUMMY = True;
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlDMncmReEDRAeNyIGi8v1qv4g_oBfqLNIfxY2iz_10uUdFno6Lo1fke058DZNcoxx/exec";
 
 // ═══════════════════════════════════════════════════════════
@@ -663,273 +664,233 @@ const DUMMY_DATA = [
   { Nama:"Budi Santoso", Kota:"Cianjur", Provinsi:"Jawa Barat", Keahlian:"Logistik", Detail:"Pengemudi truk 10 tahun, siap evakuasi", Kontak:"082345678901", Status:"Siap", Verified:"TRUE", Flags:"0" },
   { Nama:"Sari Dewi", Kota:"Bandung", Provinsi:"Jawa Barat", Keahlian:"Psikologi", Detail:"Psikolog klinis, spesialis trauma bencana", Kontak:"083456789012", Status:"Siap", Verified:"FALSE", Flags:"0" },
   { Nama:"Ahmad Fauzi", Kota:"Jakarta Selatan", Provinsi:"DKI Jakarta", Keahlian:"Teknik", Detail:"Teknisi listrik PLN, siap perbaikan darurat", Kontak:"084567890123", Status:"Terbatas", Verified:"TRUE", Flags:"0" },
-  { Nama:"Lestari Ningrum", Kota:"Bogor", Provinsi:"Jawa Barat", Keahlian:"Komunikasi", Detail:"Operator radio amatir ORARI, bisa koordinasi lapangan", Kontak:"085678901234", Status:"Siap", Verified:"FALSE", Flags:"0" },
-  { Nama:"Hendra Wijaya", Kota:"Depok", Provinsi:"Jawa Barat", Keahlian:"Medis", Detail:"Perawat IGD RS Universitas Indonesia", Kontak:"086789012345", Status:"Siap", Verified:"TRUE", Flags:"0" },
-  { Nama:"Fitriani", Kota:"Sukabumi", Provinsi:"Jawa Barat", Keahlian:"Lainnya", Detail:"Koordinator dapur umum, bisa masak untuk 200 orang", Kontak:"087890123456", Status:"Siap", Verified:"FALSE", Flags:"0" },
-  { Nama:"Rudi Hermawan", Kota:"Bogor", Provinsi:"Jawa Barat", Keahlian:"Teknik", Detail:"Arsitek, bisa asesmen bangunan rusak", Kontak:"088901234567", Status:"Terbatas", Verified:"FALSE", Flags:"0" },
-  { Nama:"Ns. Dina Marlina", Kota:"Bekasi", Provinsi:"Jawa Barat", Keahlian:"Medis", Detail:"Bidan komunitas, spesialis ibu dan anak", Kontak:"089012345678", Status:"Siap", Verified:"TRUE", Flags:"0" },
-  { Nama:"Yanuar Pratama", Kota:"Jakarta Timur", Provinsi:"DKI Jakarta", Keahlian:"Logistik", Detail:"Punya pickup double cabin, bisa angkut 1 ton", Kontak:"081122334455", Status:"Siap", Verified:"FALSE", Flags:"0" },
-  { Nama:"Citra Puspita", Kota:"Tangerang", Provinsi:"Banten", Keahlian:"Komunikasi", Detail:"Jurnalis lapangan, bisa dokumentasi dan siaran darurat", Kontak:"082233445566", Status:"Siap", Verified:"TRUE", Flags:"0" },
-  { Nama:"Pak Sutrisno", Kota:"Cianjur", Provinsi:"Jawa Barat", Keahlian:"Teknik", Detail:"Tukang bangunan 20 tahun, perbaikan cepat", Kontak:"083344556677", Status:"Siap", Verified:"FALSE", Flags:"0" },
+  { Nama:"Lestari Ningrum", Kota:"Bogor", Provinsi:"Jawa Barat", Keahlian:"Komunikasi", Detail:"Operator radio amatir ORARI, bisa koordinasi lapangan", Kontak:"085678901234", Status:"Siap", Verified:"FALSE", Flags:"0" }
 ];
 
-let allData = [];
-let flagTarget = null;
+let ALL_DATA = [];
 
-// ═══════════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════════
-function showSection(id) {
+window.onload = function() {
+  loadData();
+};
+
+function showSection(sec) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('sec-' + id).classList.add('active');
-  const tabs = ['home','cari','daftar','tentang'];
-  document.querySelectorAll('.nav-tab')[tabs.indexOf(id)].classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (id === 'cari') loadData();
-  if (id === 'home') loadStats();
+  
+  const targetSec = document.getElementById('sec-' + sec);
+  if(targetSec) targetSec.classList.add('active');
+  
+  // Kasih class active ke tombol nav yang sesuai
+  const tabs = document.querySelectorAll('.nav-tab');
+  tabs.forEach(tab => {
+    if(tab.getAttribute('onclick').includes(`'${sec}'`)) {
+      tab.classList.add('active');
+    }
+  });
 }
 
-// ═══════════════════════════════════════════════════════════
-// LOAD DATA
-// ═══════════════════════════════════════════════════════════
-async function loadData() {
-  document.getElementById('cards-container').innerHTML =
-    '<div class="loading"><div class="spinner"></div> Memuat data relawan...</div>';
+function goToCari() {
+  showSection('cari');
+}
 
-  if (USE_DUMMY) {
-    await new Promise(r => setTimeout(r, 800)); // simulasi loading
-    allData = DUMMY_DATA;
-    populateKotaFilter();
-    renderCards(allData);
+async function loadData() {
+  const container = document.getElementById('cards-container');
+  if(USE_DUMMY) {
+    ALL_DATA = DUMMY_DATA;
+    renderCards(ALL_DATA);
+    updateStats(ALL_DATA);
+    populateKotaFilter(ALL_DATA);
     return;
   }
-
+  
   try {
-    const res = await fetch(APPS_SCRIPT_URL + '?action=get');
+    const res = await fetch(APPS_SCRIPT_URL);
     const json = await res.json();
-    allData = json.data || [];
-    populateKotaFilter();
-    renderCards(allData);
-  } catch(e) {
-    allData = DUMMY_DATA;
-    populateKotaFilter();
-    renderCards(allData);
-    showToast('⚠️ Pakai data demo — backend belum terhubung');
-  }
-}
-
-async function loadStats() {
-  let data = allData;
-  if (!data.length) {
-    if (USE_DUMMY) data = DUMMY_DATA;
-    else {
-      try {
-        const res = await fetch(APPS_SCRIPT_URL + '?action=get');
-        const json = await res.json();
-        data = json.data || DUMMY_DATA;
-      } catch { data = DUMMY_DATA; }
+    if(json.status === 'success') {
+      ALL_DATA = json.data;
+      renderCards(ALL_DATA);
+      updateStats(ALL_DATA);
+      populateKotaFilter(ALL_DATA);
+    } else {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Gagal memuat data resmi</h3><p>Server mengembalikan status error.</p></div>`;
     }
+  } catch(e) {
+    console.error(e);
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><h3>Gagal menyambung ke server</h3><p>Pastikan Apps Script dideploy sebagai Web App & setel akses ke 'Anyone'.</p></div>`;
   }
-  const kota = new Set(data.map(d => d.Kota)).size;
-  const verified = data.filter(d => d.Verified === 'TRUE').length;
-  animateNum('stat-total', data.length);
-  animateNum('stat-kota', kota);
-  animateNum('stat-verified', verified);
-}
-
-function animateNum(id, target) {
-  let curr = 0;
-  const el = document.getElementById(id);
-  const step = Math.ceil(target / 30);
-  const iv = setInterval(() => {
-    curr = Math.min(curr + step, target);
-    el.textContent = curr;
-    if (curr >= target) clearInterval(iv);
-  }, 40);
-}
-
-// ═══════════════════════════════════════════════════════════
-// RENDER CARDS
-// ═══════════════════════════════════════════════════════════
-function populateKotaFilter() {
-  const kotas = [...new Set(allData.map(d => d.Kota))].filter(Boolean).sort();
-  const sel = document.getElementById('filter-kota');
-  sel.innerHTML = '<option value="">Semua Kota</option>';
-  kotas.forEach(k => sel.innerHTML += `<option value="${k}">${k}</option>`);
-}
-
-function skillClass(skill) {
-  const map = { Medis:'medis', Logistik:'logistik', Teknik:'teknik', Komunikasi:'komunikasi', Psikologi:'psikologi' };
-  return map[skill] || 'lainnya';
-}
-
-function skillEmoji(skill) {
-  const map = { Medis:'🏥', Logistik:'🚛', Teknik:'🔧', Komunikasi:'📻', Psikologi:'🧠' };
-  return (map[skill] || '🤝') + ' ' + skill;
 }
 
 function renderCards(data) {
   const container = document.getElementById('cards-container');
-  if (!data.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3>Tidak ada relawan ditemukan</h3><p>Coba ubah filter pencarian kamu</p></div>`;
+  if(!container) return;
+  
+  if(data.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3>Tidak ada relawan ditemukan</h3><p>Coba kata kunci atau filter kota lain.</p></div>`;
     return;
   }
-  container.innerHTML = `<div style="font-size:0.85rem;color:var(--grey);margin-bottom:1rem">${data.length} relawan ditemukan</div><div class="cards-grid">` +
-    data.map((d, i) => {
-      const sc = skillClass(d.Keahlian);
-      const displayNama = d.Nama;
-      const displayKota = d.Kota;
-      const displayProvinsi = d.Provinsi;
-      const initials = displayNama.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-      const isVerified = d.Verified === 'TRUE';
-      return `<div class="relawan-card" style="animation-delay:${i*0.04}s">
-        <button class="flag-btn" title="Laporkan data ini" onclick="openFlag(${i})">🚩</button>
+  
+  let html = '<div class="cards-grid">';
+  data.forEach((r, idx) => {
+    const sCls = (r.Keahlian || 'Lainnya').toLowerCase();
+    const isVer = r.Verified === 'TRUE' || r.Verified === true;
+    
+    html += `
+      <div class="relawan-card">
+        <button class="flag-btn" onclick="openFlag(${idx})" title="Laporkan data tidak valid">🚩</button>
         <div class="card-top">
-          <div class="card-avatar avatar-${sc}">${initials}</div>
-          <span class="badge-verify ${isVerified ? 'badge-verified' : 'badge-unverified'}">
-            ${isVerified ? '✓ Terverifikasi' : '⏳ Belum diverifikasi'}
+          <div class="card-avatar avatar-${sCls}">${(r.Nama || 'R').charAt(0)}</div>
+          <span class="badge-verify ${isVer ? 'badge-verified' : 'badge-unverified'}">
+            ${isVer ? '✓ Terverifikasi' : 'Belum Verifikasi'}
           </span>
         </div>
-        <div class="card-name">${displayNama}</div>
-        <span class="card-skill skill-${sc}">${skillEmoji(d.Keahlian)}</span>
+        <div class="card-name">${r.Nama || 'Tanpa Nama'}</div>
+        <span class="card-skill skill-${sCls}">${r.Keahlian || 'Lainnya'}</span>
         <div class="card-info">
-          ${d.Detail ? `<div class="card-info-row"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>${d.Detail}</div>` : ''}
-          <div class="card-info-row"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>${displayKota}, ${displayProvinsi}</div>
-          <div class="card-info-row" style="color:${d.Status==='Siap'?'var(--green)':d.Status==='Terbatas'?'var(--amber)':'var(--grey)'}">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
-            ${d.Status}
-          </div>
+          <div class="card-info-row">📍 <span>${r.Kota || '-'}, ${r.Provinsi || '-'}</span></div>
+          <div class="card-info-row">📝 <span>${r.Detail || 'Tidak ada detail tambahan.'}</span></div>
+          <div class="card-info-row">⏱️ <span>Ketersediaan: <strong>${r.Status || 'Siap'}</strong></span></div>
         </div>
         <div class="card-kontak">
-          <span class="kontak-num">📞 ${d.Kontak}</span>
-          <button class="btn-kontak" onclick="window.open('tel:${d.Kontak}')">Hubungi</button>
+          <div class="kontak-num">${maskKontak(r.Kontak)}</div>
+          <button class="btn-kontak" onclick="hubungiRelawan('${r.Kontak}')">Hubungi</button>
         </div>
-      </div>`;
-    }).join('') + '</div>';
+      </div>
+    `;
+  });
+  html += '</div>';
+  container.innerHTML = html;
 }
 
-// ═══════════════════════════════════════════════════════════
-// FILTER
-// ═══════════════════════════════════════════════════════════
+function maskKontak(num) {
+  if(!num) return '-';
+  if(num.length > 6) return num.substring(0, num.length - 4) + '****';
+  return num;
+}
+
+function hubungiRelawan(num) {
+  if(!num) return;
+  window.open(`https://wa.me/${num.replace(/[^0-9]/g, '')}`, '_blank');
+}
+
+function updateStats(data) {
+  document.getElementById('stat-total').innerText = data.length;
+  
+  const uniqueKota = [...new Set(data.map(r => r.Kota).filter(Boolean))];
+  document.getElementById('stat-kota').innerText = uniqueKota.length;
+  
+  const verCount = data.filter(r => r.Verified === 'TRUE' || r.Verified === true).length;
+  document.getElementById('stat-verified').innerText = verCount;
+}
+
+function populateKotaFilter(data) {
+  const sel = document.getElementById('filter-kota');
+  if(!sel) return;
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">Semua Kota</option>';
+  
+  const uniqueKota = [...new Set(data.map(r => r.Kota).filter(Boolean))].sort();
+  uniqueKota.forEach(k => {
+    sel.innerHTML += `<option value="${k}">${k}</option>`;
+  });
+  sel.value = currentVal;
+}
+
 function filterCards() {
-  const nama = document.getElementById('search-nama').value.toLowerCase().trim();
-  const kota = document.getElementById('filter-kota').value.toLowerCase().trim();
-  const skill = document.getElementById('filter-skill').value;
-  const filtered = allData.filter(d =>
-    (!nama ||
-      (d.Nama||'').toLowerCase().includes(nama) ||
-      (d.Detail||'').toLowerCase().includes(nama) ||
-      (d.Keahlian||'').toLowerCase().includes(nama) ||
-      (d.Kota||'').toLowerCase().includes(nama)
-    ) &&
-    (!kota || (d.Kota||'').toLowerCase() === kota) &&
-    (!skill || d.Keahlian === skill)
-  );
+  const qNama = document.getElementById('search-nama').value.toLowerCase();
+  const qKota = document.getElementById('filter-kota').value;
+  const qSkill = document.getElementById('filter-skill').value;
+  
+  const filtered = ALL_DATA.filter(r => {
+    const matchNama = (r.Nama || '').toLowerCase().includes(qNama) || (r.Detail || '').toLowerCase().includes(qNama);
+    const matchKota = !qKota || r.Kota === qKota;
+    const matchSkill = !qSkill || r.Keahlian === qSkill;
+    return matchNama && matchKota && matchSkill;
+  });
+  
   renderCards(filtered);
 }
 
-// ═══════════════════════════════════════════════════════════
-// HELPER — Capitalize setiap kata (untuk kota & provinsi)
-// ═══════════════════════════════════════════════════════════
-function toTitleCase(str) {
-  return str.trim().replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-}
-function toNameCase(str) {
-  return str.trim().replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1));
-}
-
-// ═══════════════════════════════════════════════════════════
-// SUBMIT FORM
-// ═══════════════════════════════════════════════════════════
 async function submitForm(e) {
   e.preventDefault();
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
-  btn.innerHTML = '<div class="spinner" style="border-top-color:white;width:16px;height:16px"></div> Menyimpan...';
-
+  btn.innerText = 'Menyimpan...';
+  
   const payload = {
-    action: 'add',
-    Nama: toNameCase(document.getElementById('f-nama').value),
-    Kota: toTitleCase(document.getElementById('f-kota').value),
-    Provinsi: toTitleCase(document.getElementById('f-provinsi').value),
+    Nama: document.getElementById('f-nama').value,
+    Kota: document.getElementById('f-kota').value,
+    Provinsi: document.getElementById('f-provinsi').value,
     Keahlian: document.getElementById('f-skill').value,
-    Detail: document.getElementById('f-detail').value.trim(),
-    Kontak: document.getElementById('f-kontak').value.trim(),
-    Status: document.getElementById('f-status').value,
+    Detail: document.getElementById('f-detail').value,
+    Kontak: document.getElementById('f-kontak').value,
+    Status: document.getElementById('f-status').value
   };
-
-  if (USE_DUMMY) {
-    await new Promise(r => setTimeout(r, 900));
-    allData.push({ ...payload, Verified: 'FALSE', Flags: '0' });
-    populateKotaFilter();
-    showSuccess();
+  
+  if(USE_DUMMY) {
+    setTimeout(() => {
+      DUMMY_DATA.push({ ...payload, Verified: 'FALSE', Flags: '0' });
+      showSuccess();
+    }, 1000);
     return;
   }
-
+  
   try {
-    await fetch(APPS_SCRIPT_URL, {
+    const res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      mode: 'no-cors'
+      body: JSON.stringify(payload)
     });
-    showSuccess();
+    const json = await res.json();
+    if(json.status === 'success') {
+      showSuccess();
+    } else {
+      alert('Gagal menyimpan: ' + (json.message || 'Error server'));
+      resetBtn();
+    }
   } catch(err) {
-    showToast('❌ Gagal menyimpan data. Coba lagi.');
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg> Daftarkan Sekarang';
+    console.error(err);
+    alert('Terjadi kesalahan koneksi saat menyimpan.');
+    resetBtn();
   }
 }
 
 function showSuccess() {
   document.getElementById('form-area').style.display = 'none';
   document.getElementById('success-area').style.display = 'block';
+  loadData();
 }
 
 function resetForm() {
   document.getElementById('reg-form').reset();
   document.getElementById('form-area').style.display = 'block';
   document.getElementById('success-area').style.display = 'none';
+  resetBtn();
+}
+
+function resetBtn() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = false;
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg> Daftarkan Sekarang';
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg> Daftarkan Sekarang`;
 }
 
-// ═══════════════════════════════════════════════════════════
-// FLAG SYSTEM
-// ═══════════════════════════════════════════════════════════
-function openFlag(idx) { flagTarget = idx; document.getElementById('flag-modal').classList.add('open'); }
-function closeFlag() { flagTarget = null; document.getElementById('flag-modal').classList.remove('open'); }
+let targetedFlagIdx = null;
+function openFlag(idx) {
+  targetedFlagIdx = idx;
+  document.getElementById('flag-modal').classList.add('open');
+}
+function closeFlag() {
+  document.getElementById('flag-modal').classList.remove('open');
+}
 function confirmFlag() {
-  if (flagTarget !== null && allData[flagTarget]) {
-    allData[flagTarget].Flags = String(parseInt(allData[flagTarget].Flags || '0') + 1);
-  }
   closeFlag();
-  showToast('🚩 Laporan terkirim. Terima kasih!');
+  showToast('🚩 Laporan berhasil dikirim. Terima kasih kontribusinya.');
 }
 
-// ═══════════════════════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════════════════════
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  t.innerText = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
 }
-
-// ═══════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════
-function goToCari() {
-  showSection('cari');
-  // data sudah ada di allData, langsung render
-  renderCards(allData);
-  filterCards();
-}
-
-loadStats();
 </script>
 </body>
 </html>
