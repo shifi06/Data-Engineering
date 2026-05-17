@@ -1,82 +1,74 @@
 // ================================================================
-// SIAPBENCANA — Google Apps Script Backend
-// Paste kode ini di Extensions → Apps Script di Google Sheets kamu
+// SIAPBENCANA — Google Apps Script Backend (dengan JSONP support)
 // ================================================================
 //
-// LANGKAH SETUP:
-// 1. Buka Google Sheets kamu
-// 2. Klik Extensions → Apps Script
-// 3. Hapus kode yang ada, paste seluruh kode ini
-// 4. Klik Save (Ctrl+S)
-// 5. Klik Deploy → New Deployment
-// 6. Pilih Type: Web App
-// 7. Execute as: Me
-// 8. Who has access: Anyone
-// 9. Klik Deploy → Copy URL yang muncul
-// 10. Paste URL itu ke file siapbencana.html (ganti PASTE_URL_APPS_SCRIPT_KAMU_DISINI)
+// PENTING: Setelah update kode ini, harus RE-DEPLOY!
+// Deploy → Manage Deployments → Edit (pensil) → Version: New Version → Deploy
+// URL tidak berubah, tapi kode ter-update.
 // ================================================================
 
 const SHEET_NAME = "Relawan";
-
-// Header kolom — pastikan sheet kamu punya header ini di baris 1
 const HEADERS = [
   "Timestamp", "Nama", "Kota", "Provinsi",
-  "Keahlian", "Detail", "Kontak", "Status",
-  "Verified", "Flags"
+  "Keahlian", "Detail", "Kontak", "Status", "Verified", "Flags"
 ];
 
-// ── GET: Ambil semua data relawan ──────────────────────────────
 function doGet(e) {
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-    
-    // Buat header kalau belum ada
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(HEADERS);
-    }
-    
+    if (sheet.getLastRow() === 0) sheet.appendRow(HEADERS);
+
     const rows = sheet.getDataRange().getValues();
     const headers = rows[0];
-    
-    // Skip baris header (index 0), convert ke array of objects
     const data = rows.slice(1).map(row => {
       const obj = {};
-      headers.forEach((h, i) => obj[h] = row[i] || "");
+      headers.forEach((h, i) => obj[h] = String(row[i] || ""));
       return obj;
     });
-    
+
+    const result = JSON.stringify({ success: true, data: data, total: data.length });
+
+    // Kalau ada callback parameter → JSONP (untuk GitHub Pages)
+    // Kalau tidak ada → JSON biasa (untuk localhost)
+    const callback = e.parameter.callback;
+    if (callback) {
+      return ContentService
+        .createTextOutput(callback + '(' + result + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+
     return ContentService
-      .createTextOutput(JSON.stringify({ success: true, data: data, total: data.length }))
+      .createTextOutput(result)
       .setMimeType(ContentService.MimeType.JSON);
-      
+
   } catch(err) {
+    const errResult = JSON.stringify({ success: false, error: err.toString() });
+    const callback = e.parameter.callback;
+    if (callback) {
+      return ContentService
+        .createTextOutput(callback + '(' + errResult + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
     return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
+      .createTextOutput(errResult)
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// ── POST: Tambah relawan baru ──────────────────────────────────
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents);
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-    
-    // Buat header kalau belum ada
-    if (sheet.getLastRow() === 0) {
-      sheet.appendRow(HEADERS);
-    }
-    
-    // Validasi field wajib
+    if (sheet.getLastRow() === 0) sheet.appendRow(HEADERS);
+
     if (!payload.Nama || !payload.Kota || !payload.Keahlian || !payload.Kontak) {
       return ContentService
         .createTextOutput(JSON.stringify({ success: false, error: "Field wajib tidak lengkap" }))
         .setMimeType(ContentService.MimeType.JSON);
     }
-    
-    // Tambah baris baru
-    const newRow = [
-      new Date().toISOString(),  // Timestamp
+
+    sheet.appendRow([
+      new Date().toISOString(),
       payload.Nama || "",
       payload.Kota || "",
       payload.Provinsi || "",
@@ -84,16 +76,14 @@ function doPost(e) {
       payload.Detail || "",
       payload.Kontak || "",
       payload.Status || "Siap",
-      "FALSE",                   // Verified: default belum terverifikasi
-      "0"                        // Flags: default 0
-    ];
-    
-    sheet.appendRow(newRow);
-    
+      "FALSE",
+      "0"
+    ]);
+
     return ContentService
-      .createTextOutput(JSON.stringify({ success: true, message: "Relawan berhasil ditambahkan" }))
+      .createTextOutput(JSON.stringify({ success: true, message: "Berhasil ditambahkan" }))
       .setMimeType(ContentService.MimeType.JSON);
-      
+
   } catch(err) {
     return ContentService
       .createTextOutput(JSON.stringify({ success: false, error: err.toString() }))
@@ -101,18 +91,9 @@ function doPost(e) {
   }
 }
 
-// ── TEST: Jalankan ini untuk cek koneksi sheet ─────────────────
 function testSetup() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEET_NAME);
-  
-  if (!sheet) {
-    Logger.log("❌ Sheet '" + SHEET_NAME + "' tidak ditemukan! Buat sheet dengan nama itu dulu.");
-    return;
-  }
-  
-  Logger.log("✅ Sheet ditemukan: " + sheet.getName());
-  Logger.log("📊 Jumlah baris data: " + (sheet.getLastRow() - 1));
-  Logger.log("🔗 Spreadsheet URL: " + ss.getUrl());
-  Logger.log("✅ Setup berhasil! Sekarang bisa Deploy sebagai Web App.");
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  if (!sheet) { Logger.log("❌ Sheet '" + SHEET_NAME + "' tidak ditemukan!"); return; }
+  Logger.log("✅ Sheet OK");
+  Logger.log("📊 Data: " + (sheet.getLastRow() - 1) + " baris");
 }

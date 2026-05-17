@@ -653,7 +653,7 @@
 // ═══════════════════════════════════════════════════════════
 // KONFIGURASI — Ganti URL ini setelah deploy Apps Script
 // ═══════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlDMncmReEDRAeNyIGi8v1qv4g_oBfqLNIfxY2iz_10uUdFno6Lo1fke058DZNcoxx/exec";
+const APPS_SCRIPT_URL = "PASTE_URL_APPS_SCRIPT_KAMU_DISINI";
 const USE_DUMMY = APPS_SCRIPT_URL === "PASTE_URL_APPS_SCRIPT_KAMU_DISINI";
 
 // ═══════════════════════════════════════════════════════════
@@ -692,6 +692,33 @@ function showSection(id) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// JSONP HELPER — bypass CORS untuk GET dari GitHub Pages
+// ═══════════════════════════════════════════════════════════
+function fetchWithJSONP(url, onSuccess, onError) {
+  const cbName = 'cb_' + Date.now();
+  const script = document.createElement('script');
+  const timeout = setTimeout(() => {
+    cleanup();
+    if (onError) onError();
+  }, 8000);
+
+  window[cbName] = function(data) {
+    cleanup();
+    onSuccess(data);
+  };
+
+  function cleanup() {
+    clearTimeout(timeout);
+    delete window[cbName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+  }
+
+  script.src = url + '&callback=' + cbName;
+  script.onerror = function() { cleanup(); if (onError) onError(); };
+  document.head.appendChild(script);
+}
+
+// ═══════════════════════════════════════════════════════════
 // LOAD DATA
 // ═══════════════════════════════════════════════════════════
 async function loadData() {
@@ -699,25 +726,32 @@ async function loadData() {
     '<div class="loading"><div class="spinner"></div> Memuat data relawan...</div>';
 
   if (USE_DUMMY) {
-    await new Promise(r => setTimeout(r, 800)); // simulasi loading
+    await new Promise(r => setTimeout(r, 800));
     allData = DUMMY_DATA;
     populateKotaFilter();
     renderCards(allData);
     return;
   }
 
-  try {
-    const res = await fetch(APPS_SCRIPT_URL + '?action=get');
-    const json = await res.json();
-    allData = json.data || [];
+  // Pakai JSONP untuk bypass CORS dari GitHub Pages
+  fetchWithJSONP(APPS_SCRIPT_URL + '?action=get', function(json) {
+    const sheetData = (json && json.data) ? json.data : [];
+    if (sheetData.length > 0) {
+      const sheetKontaks = new Set(sheetData.map(d => d.Kontak));
+      const filteredDummy = DUMMY_DATA.filter(d => !sheetKontaks.has(d.Kontak));
+      allData = [...sheetData, ...filteredDummy];
+    } else {
+      allData = DUMMY_DATA;
+    }
     populateKotaFilter();
     renderCards(allData);
-  } catch(e) {
+  }, function() {
+    // fallback jika gagal
     allData = DUMMY_DATA;
     populateKotaFilter();
     renderCards(allData);
     showToast('⚠️ Pakai data demo — backend belum terhubung');
-  }
+  });
 }
 
 async function loadStats() {
@@ -725,11 +759,12 @@ async function loadStats() {
   if (!data.length) {
     if (USE_DUMMY) data = DUMMY_DATA;
     else {
-      try {
-        const res = await fetch(APPS_SCRIPT_URL + '?action=get');
-        const json = await res.json();
-        data = json.data || DUMMY_DATA;
-      } catch { data = DUMMY_DATA; }
+      await new Promise(resolve => {
+        fetchWithJSONP(APPS_SCRIPT_URL + '?action=get', function(json) {
+          data = (json && json.data && json.data.length) ? json.data : DUMMY_DATA;
+          resolve();
+        }, function() { data = DUMMY_DATA; resolve(); });
+      });
     }
   }
   const kota = new Set(data.map(d => d.Kota)).size;
