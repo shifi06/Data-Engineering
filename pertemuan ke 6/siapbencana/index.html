@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SiapBencana — Direktori Relawan Darurat Indonesia</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
 <style>
   :root {
     --red: #D93025;
@@ -407,6 +408,9 @@
     <button class="nav-tab" onclick="showSection('cari')">Cari Relawan</button>
     <button class="nav-tab" onclick="showSection('daftar')">Daftar</button>
     <button class="nav-tab" onclick="showSection('tentang')">Tentang</button>
+    <a id="nav-login" class="nav-tab nav-cta" href="login.html">🔑 Login</a>
+    <a id="nav-dashboard" class="nav-tab" href="dashboard.html" style="display:none"></a>
+    <button id="nav-logout" class="nav-tab nav-logout" onclick="logout()" style="display:none">Keluar</button>
   </div>
 </nav>
 
@@ -696,7 +700,7 @@
 // ═══════════════════════════════════════════════════════════
 // KONFIGURASI — Ganti URL ini setelah deploy Apps Script
 // ═══════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxlDMncmReEDRAeNyIGi8v1qv4g_oBfqLNIfxY2iz_10uUdFno6Lo1fke058DZNcoxx/exec";
+const APPS_SCRIPT_URL = "PASTE_URL_APPS_SCRIPT_KAMU_DISINI";
 const USE_DUMMY = APPS_SCRIPT_URL === "PASTE_URL_APPS_SCRIPT_KAMU_DISINI";
 
 // ═══════════════════════════════════════════════════════════
@@ -1070,6 +1074,17 @@ function goToCari() {
 }
 
 loadStats();
+
+// Update nav setelah load
+if (typeof updateNav === 'function') updateNav();
+</script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+// Cek session untuk update nav
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof updateNav === 'function') updateNav();
+});
 </script>
 </body>
 </html>

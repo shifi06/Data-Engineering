@@ -1,0 +1,230 @@
+/* ================================================================
+   SIAPBENCANA — dashboard.css
+   Style khusus dashboard: semua role (relawan, koordinator, admin)
+   ================================================================ */
+
+/* ── Layout Dashboard ── */
+.dashboard-wrap {
+  max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem;
+}
+
+.dashboard-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; flex-wrap: wrap;
+  gap: 12px; margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--grey-border);
+}
+
+.dashboard-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem; font-weight: 800; color: var(--black);
+}
+.dashboard-subtitle {
+  font-size: 0.875rem; color: var(--grey); margin-top: 4px;
+}
+
+.dashboard-role-badge {
+  padding: 6px 14px; border-radius: 99px;
+  font-size: 0.8rem; font-weight: 600;
+}
+
+/* ── Stats Grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px; margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white; border: 1px solid var(--grey-border);
+  border-radius: 12px; padding: 1.25rem 1rem; text-align: center;
+  transition: all 0.2s;
+}
+.stat-card:hover { border-color: var(--red-mid); transform: translateY(-1px); }
+.stat-card-num {
+  font-family: 'Syne', sans-serif; font-size: 2rem;
+  font-weight: 800; color: var(--black); line-height: 1;
+}
+.stat-card-num.red    { color: var(--red); }
+.stat-card-num.green  { color: var(--green); }
+.stat-card-num.amber  { color: var(--amber); }
+.stat-card-num.blue   { color: var(--blue); }
+.stat-card-label {
+  font-size: 0.78rem; color: var(--grey); margin-top: 6px; line-height: 1.3;
+}
+
+/* ── Tabs inside dashboard ── */
+.dash-tabs {
+  display: flex; gap: 4px; margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--grey-border);
+  overflow-x: auto;
+}
+.dash-tab {
+  padding: 8px 16px; border: none; background: transparent;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem; font-weight: 500; color: var(--grey);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.15s; white-space: nowrap;
+}
+.dash-tab:hover { color: var(--black); }
+.dash-tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+/* ── Profile Card (Relawan) ── */
+.profile-card {
+  background: white; border: 1px solid var(--grey-border);
+  border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;
+}
+.profile-card-top {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 1.25rem;
+}
+.profile-avatar {
+  width: 60px; height: 60px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 1.3rem; flex-shrink: 0;
+}
+.profile-info-name {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 1.1rem; margin-bottom: 4px;
+}
+.profile-info-kode {
+  font-size: 0.78rem; color: var(--grey);
+  font-family: monospace; background: var(--grey-light);
+  padding: 2px 8px; border-radius: 4px;
+}
+.profile-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.profile-field label {
+  font-size: 0.78rem; color: var(--grey); display: block; margin-bottom: 3px;
+}
+.profile-field p {
+  font-size: 0.9rem; font-weight: 500; color: var(--black);
+}
+
+/* ── Badge Level (gamifikasi) ── */
+.badge-level-wrap {
+  background: white; border: 1px solid var(--grey-border);
+  border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem;
+}
+.badge-level-title {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 0.95rem; margin-bottom: 1rem;
+}
+.badge-levels { display: flex; gap: 12px; flex-wrap: wrap; }
+.badge-level-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px; opacity: 0.3; transition: opacity 0.2s;
+}
+.badge-level-item.earned { opacity: 1; }
+.badge-level-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; border: 2px solid var(--grey-border);
+}
+.badge-level-item.earned .badge-level-icon { border-color: var(--amber); }
+.badge-level-name { font-size: 0.72rem; color: var(--grey); font-weight: 500; }
+
+/* ── Table (Admin) ── */
+.data-table-wrap { overflow-x: auto; }
+.data-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.data-table th {
+  background: var(--grey-light); padding: 10px 12px;
+  text-align: left; font-weight: 600; font-size: 0.78rem;
+  color: var(--grey); border-bottom: 1px solid var(--grey-border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 10px 12px; border-bottom: 1px solid #F5F5F5;
+  vertical-align: middle;
+}
+.data-table tr:hover td { background: var(--grey-light); }
+.data-table .action-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ── Search bar (Koordinator & Admin) ── */
+.dash-search-bar {
+  display: flex; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+.dash-search-input {
+  flex: 1; min-width: 180px;
+  padding: 10px 14px; border: 1.5px solid var(--grey-border);
+  border-radius: 8px; font-size: 0.9rem;
+  font-family: 'DM Sans', sans-serif;
+  outline: none; transition: border-color 0.15s; background: white;
+}
+.dash-search-input:focus { border-color: var(--red); }
+.dash-search-select {
+  padding: 10px 14px; border: 1.5px solid var(--grey-border);
+  border-radius: 8px; font-size: 0.9rem;
+  font-family: 'DM Sans', sans-serif;
+  outline: none; background: white; cursor: pointer;
+  min-width: 150px;
+}
+.dash-search-select:focus { border-color: var(--red); }
+
+/* ── Relawan Cards (Koordinator view - nomor HP visible) ── */
+.koord-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 14px; }
+.koord-card {
+  background: white; border: 1px solid var(--grey-border);
+  border-radius: 12px; padding: 1.1rem;
+  transition: all 0.2s;
+}
+.koord-card:hover { border-color: var(--blue-light); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+.koord-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
+.koord-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem; font-family: 'Syne', sans-serif;
+  flex-shrink: 0;
+}
+.koord-card-name { font-weight: 600; font-size: 0.95rem; }
+.koord-card-skill { font-size: 0.75rem; color: var(--grey); }
+.koord-card-info { font-size: 0.82rem; color: var(--grey); line-height: 1.7; margin-bottom: 0.75rem; }
+.koord-card-kontak {
+  background: var(--blue-light); border-radius: 8px;
+  padding: 8px 12px; display: flex; align-items: center;
+  justify-content: space-between;
+}
+.koord-card-kontak span { font-weight: 600; font-size: 0.85rem; color: var(--blue); }
+
+/* ── Dispatch form (Koordinator) ── */
+.dispatch-form {
+  background: var(--blue-light); border: 1px solid #C0D8F0;
+  border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;
+}
+.dispatch-form h3 {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  margin-bottom: 1rem; color: var(--blue);
+}
+
+/* ── Section card ── */
+.section-card {
+  background: white; border: 1px solid var(--grey-border);
+  border-radius: 14px; padding: 1.5rem; margin-bottom: 1.5rem;
+}
+.section-card-title {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: 1rem; margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── Status toggle ── */
+.status-toggle {
+  display: flex; gap: 6px;
+}
+.status-toggle button {
+  padding: 6px 14px; border-radius: 99px; font-size: 0.8rem;
+  font-weight: 500; border: 1.5px solid; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+}
+
+/* ── Responsive ── */
+@media(max-width: 600px) {
+  .dashboard-wrap { padding: 1.25rem; }
+  .profile-fields { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .data-table { font-size: 0.8rem; }
+  .data-table th, .data-table td { padding: 8px; }
+}

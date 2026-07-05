@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — SiapBencana</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+<style>
+  .login-wrap {
+    min-height: calc(100vh - 60px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem 1rem;
+  }
+  .login-card {
+    background: white; border: 1px solid var(--grey-border);
+    border-radius: 20px; padding: 2.5rem;
+    width: 100%; max-width: 420px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .login-icon {
+    width: 56px; height: 56px; background: var(--red-light);
+    border-radius: 14px; display: flex; align-items: center;
+    justify-content: center; font-size: 1.6rem; margin-bottom: 1.25rem;
+  }
+  .login-title {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.5rem; margin-bottom: 6px;
+  }
+  .login-sub { color: var(--grey); font-size: 0.875rem; line-height: 1.6; margin-bottom: 2rem; }
+  .login-input-wrap { position: relative; }
+  .login-input {
+    width: 100%; padding: 13px 16px 13px 44px;
+    border: 1.5px solid var(--grey-border); border-radius: 10px;
+    font-size: 1rem; font-family: 'DM Sans', monospace;
+    outline: none; transition: border-color 0.15s;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .login-input:focus { border-color: var(--red); }
+  .login-input-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 1.1rem; pointer-events: none;
+  }
+  .login-btn {
+    width: 100%; padding: 13px; background: var(--red); color: white;
+    border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    margin-top: 1rem; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .login-btn:hover { background: var(--red-dark); }
+  .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .login-error {
+    background: var(--red-light); border: 1px solid var(--red-mid);
+    color: var(--red-dark); border-radius: 8px; padding: 10px 14px;
+    font-size: 0.875rem; margin-top: 0.75rem; display: none;
+  }
+  .login-info {
+    margin-top: 1.75rem; padding-top: 1.5rem;
+    border-top: 1px solid var(--grey-border);
+  }
+  .login-info-title { font-size: 0.78rem; font-weight: 600; color: var(--grey); margin-bottom: 0.75rem; letter-spacing: 0.05em; }
+  .login-roles { display: flex; flex-direction: column; gap: 8px; }
+  .login-role-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px; background: var(--grey-light);
+  }
+  .login-role-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .login-role-text { font-size: 0.82rem; }
+  .login-role-text strong { display: block; color: var(--black); }
+  .login-role-text span { color: var(--grey); }
+  .back-link {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--grey); font-size: 0.85rem; text-decoration: none;
+    margin-bottom: 1.5rem; transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--black); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="logo-dot">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+    </div>
+    Siap<span>Bencana</span>
+  </a>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="index.html">← Kembali</a>
+  </div>
+</nav>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-icon">🔑</div>
+    <div class="login-title">Masuk ke SiapBencana</div>
+    <div class="login-sub">Masukkan kode unik yang kamu terima saat mendaftar. Kode bersifat rahasia — jangan bagikan ke siapapun.</div>
+
+    <div class="form-group">
+      <label class="form-label">Kode Unik <span>*</span></label>
+      <div class="login-input-wrap">
+        <span class="login-input-icon">🔐</span>
+        <input class="login-input" id="input-kode" type="text"
+          placeholder="SB-XXXXXX" maxlength="20"
+          oninput="this.value = this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter') doLoginAction()">
+      </div>
+    </div>
+
+    <div class="login-error" id="login-error"></div>
+
+    <button class="login-btn" id="login-btn" onclick="doLoginAction()">
+      <span id="btn-text">Masuk</span>
+    </button>
+
+    <div style="margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--grey-border);font-size:0.82rem;color:var(--grey);text-align:center;line-height:1.6">
+      Belum punya kode? <a href="index.html#daftar" style="color:var(--red);font-weight:500;text-decoration:none">Daftarkan diri kamu dulu →</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+  // Kalau sudah login, redirect ke halaman yang sesuai
+  (function() {
+    const s = getSession();
+    if (s) redirectAfterLogin(s.role);
+  })();
+
+  function redirectAfterLogin(role) {
+    if (role === 'admin') window.location.href = 'admin.html';
+    else window.location.href = 'dashboard.html';
+  }
+
+  function doLoginAction() {
+    const kode = document.getElementById('input-kode').value.trim();
+    const errEl = document.getElementById('login-error');
+    const btn = document.getElementById('login-btn');
+    const btnText = document.getElementById('btn-text');
+
+    errEl.style.display = 'none';
+    if (!kode) {
+      errEl.textContent = 'Masukkan kode unik kamu dulu.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btnText.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-top-color:white;margin:0 auto"></div>';
+
+    doLogin(kode, (res) => {
+      redirectAfterLogin(res.role);
+    }, (msg) => {
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btnText.textContent = 'Masuk';
+    });
+  }
+</script>
+</body>
+</html>

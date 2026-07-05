@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — SiapBencana</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="logo-dot">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+    </div>
+    Siap<span>Bencana</span>
+  </a>
+  <div class="nav-tabs">
+    <a class="nav-tab" href="index.html">🏠 Beranda</a>
+    <span id="nav-role-badge" class="badge" style="padding:6px 12px;font-size:0.8rem"></span>
+    <button class="nav-tab nav-logout" onclick="logout()">Keluar →</button>
+  </div>
+</nav>
+
+<!-- DASHBOARD RELAWAN -->
+<div id="dash-relawan" style="display:none">
+  <div class="dashboard-wrap">
+    <div class="dashboard-header">
+      <div>
+        <div class="dashboard-title">👤 Dashboard Relawan</div>
+        <div class="dashboard-subtitle" id="relawan-sub">Selamat datang!</div>
+      </div>
+      <span class="badge badge-relawan dashboard-role-badge">Relawan</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card-num" id="r-status-display" style="font-size:1.2rem">—</div>
+        <div class="stat-card-label">Status Ketersediaan</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-num" id="r-verify-display" style="font-size:1rem">—</div>
+        <div class="stat-card-label">Status Verifikasi</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-num" id="r-kode-display" style="font-size:0.9rem;font-family:monospace">—</div>
+        <div class="stat-card-label">Kode Unik Kamu</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="dash-tabs">
+      <button class="dash-tab active" data-tab="profil" onclick="loadTab('profil')">📋 Profil Saya</button>
+      <button class="dash-tab" data-tab="badge" onclick="loadTab('badge')">🏆 Badge & Level</button>
+      <button class="dash-tab" data-tab="status" onclick="loadTab('status')">⚡ Ubah Status</button>
+    </div>
+
+    <!-- Panel Profil -->
+    <div id="panel-profil" class="dash-panel">
+      <div class="profile-card">
+        <div class="profile-card-top">
+          <div class="profile-avatar" id="profile-avatar">?</div>
+          <div>
+            <div class="profile-info-name" id="profile-name">—</div>
+            <code class="profile-info-kode" id="profile-kode">—</code>
+            <div style="margin-top:6px">
+              <span class="badge" id="profile-verify-badge">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-fields">
+          <div class="profile-field"><label>Keahlian</label><p id="pf-keahlian">—</p></div>
+          <div class="profile-field"><label>Detail</label><p id="pf-detail">—</p></div>
+          <div class="profile-field"><label>Lokasi</label><p id="pf-kota">—</p></div>
+          <div class="profile-field"><label>Kontak Darurat</label><p id="pf-kontak">—</p></div>
+          <div class="profile-field"><label>Status</label><p id="pf-status">—</p></div>
+          <div class="profile-field"><label>Terdaftar Sejak</label><p id="pf-terdaftar">—</p></div>
+        </div>
+      </div>
+
+      <!-- View mode -->
+      <div id="view-mode">
+        <button class="btn-primary" onclick="enableEditMode()">✏️ Edit Profil</button>
+      </div>
+
+      <!-- Edit mode -->
+      <div id="edit-mode" style="display:none">
+        <div class="section-card">
+          <div class="section-card-title">✏️ Edit Profil</div>
+          <div class="form-group">
+            <label class="form-label">Detail Keahlian</label>
+            <input class="form-input" id="edit-detail" type="text" placeholder="Deskripsi keahlian kamu">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nomor Kontak Darurat</label>
+            <input class="form-input" id="edit-kontak" type="tel">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ketersediaan</label>
+            <select class="form-select" id="edit-status">
+              <option value="Siap">✅ Siap dipanggil kapanpun</option>
+              <option value="Terbatas">⏰ Terbatas (perlu konfirmasi)</option>
+              <option value="Tidak Aktif">❌ Sementara tidak aktif</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn-primary" id="save-btn" onclick="saveProfile()">💾 Simpan Perubahan</button>
+            <button class="btn-secondary" onclick="cancelEdit()">Batal</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Badge -->
+    <div id="panel-badge" class="dash-panel" style="display:none">
+      <div class="badge-level-wrap">
+        <div class="badge-level-title">🏆 Badge & Level Kamu</div>
+        <p style="font-size:0.85rem;color:var(--grey);margin-bottom:1rem">Semakin aktif kamu berkontribusi, semakin tinggi level badge kamu.</p>
+        <div class="badge-levels" id="badge-levels"></div>
+      </div>
+      <div class="section-card" style="margin-top:1rem">
+        <div class="section-card-title">ℹ️ Cara naik level</div>
+        <ul style="padding-left:1.25rem;font-size:0.875rem;color:var(--grey);line-height:2">
+          <li>Daftarkan diri → dapat badge <strong>Sudah Daftar</strong></li>
+          <li>Tunggu admin verifikasi → dapat badge <strong>Terverifikasi</strong></li>
+          <li>Set status Siap + sudah terverifikasi → <strong>Relawan Aktif</strong></li>
+          <li>Aktif + tidak pernah diflag → <strong>Relawan Andalan</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Panel Status -->
+    <div id="panel-status" class="dash-panel" style="display:none">
+      <div class="section-card">
+        <div class="section-card-title">⚡ Status Ketersediaan Kamu</div>
+        <p style="font-size:0.875rem;color:var(--grey);margin-bottom:1.25rem">
+          Ubah status kamu sesuai kondisi. Koordinator hanya bisa menghubungi relawan yang statusnya <strong>Siap</strong>.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn-success" style="padding:12px;border-radius:8px;font-size:0.95rem" onclick="setStatus('Siap')">
+            ✅ Siap — Saya bisa dihubungi kapanpun
+          </button>
+          <button class="btn-warning" style="padding:12px;border-radius:8px;font-size:0.95rem;background:var(--amber-light);color:var(--amber);border:none;cursor:pointer" onclick="setStatus('Terbatas')">
+            ⏰ Terbatas — Perlu konfirmasi dulu sebelum dispatch
+          </button>
+          <button style="padding:12px;border-radius:8px;font-size:0.95rem;background:var(--grey-light);color:var(--grey);border:none;cursor:pointer" onclick="setStatus('Tidak Aktif')">
+            ❌ Tidak Aktif — Sedang tidak bisa dihubungi
+          </button>
+        </div>
+        <div style="margin-top:1rem;padding:1rem;background:var(--grey-light);border-radius:8px;font-size:0.8rem;color:var(--grey)">
+          Status saat ini: <strong id="current-status" style="color:var(--black)">—</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD KOORDINATOR -->
+<div id="dash-koordinator" style="display:none">
+  <div class="dashboard-wrap">
+    <div class="dashboard-header">
+      <div>
+        <div class="dashboard-title">🗺️ Dashboard Koordinator</div>
+        <div class="dashboard-subtitle">
+          <span id="koord-nama">—</span> &nbsp;·&nbsp;
+          Wilayah: <span id="koord-wilayah">—</span> &nbsp;·&nbsp;
+          Kode: <code id="koord-kode" style="font-size:0.8rem;background:var(--grey-light);padding:2px 8px;border-radius:4px">—</code>
+        </div>
+      </div>
+      <span class="badge badge-koord dashboard-role-badge">Koordinator</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-card-num" id="ks-total">—</div><div class="stat-card-label">Total Relawan</div></div>
+      <div class="stat-card"><div class="stat-card-num green" id="ks-aktif">—</div><div class="stat-card-label">Relawan Siap</div></div>
+      <div class="stat-card"><div class="stat-card-num blue" id="ks-verified">—</div><div class="stat-card-label">Terverifikasi</div></div>
+      <div class="stat-card"><div class="stat-card-num" id="ks-kota">—</div><div class="stat-card-label">Kota Terjangkau</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="dash-tabs">
+      <button class="dash-tab active" data-tab="cari-k" onclick="loadTabK('cari-k')">🔍 Cari Relawan</button>
+      <button class="dash-tab" data-tab="dispatch" onclick="loadTabK('dispatch')">📢 Kirim Permintaan</button>
+    </div>
+
+    <!-- Panel Cari -->
+    <div id="panel-cari-k" class="dash-panel">
+      <div class="dash-search-bar">
+        <input class="dash-search-input" id="koord-search" type="text" placeholder="Cari nama atau keahlian..." oninput="filterKoord()">
+        <select class="dash-search-select" id="koord-filter-kota" onchange="filterKoord()">
+          <option value="">Semua Kota</option>
+        </select>
+        <select class="dash-search-select" id="koord-filter-skill" onchange="filterKoord()">
+          <option value="">Semua Keahlian</option>
+          <option value="Medis">🏥 Medis</option>
+          <option value="Logistik">🚛 Logistik</option>
+          <option value="Teknik">🔧 Teknik</option>
+          <option value="Komunikasi">📻 Komunikasi</option>
+          <option value="Psikologi">🧠 Psikologi</option>
+          <option value="Lainnya">🤝 Lainnya</option>
+        </select>
+        <select class="dash-search-select" id="koord-filter-status" onchange="filterKoord()">
+          <option value="">Semua Status</option>
+          <option value="Siap">✅ Siap</option>
+          <option value="Terbatas">⏰ Terbatas</option>
+        </select>
+      </div>
+      <div style="font-size:0.85rem;color:var(--grey);margin-bottom:1rem" id="koord-result-count"></div>
+      <div id="koord-cards"></div>
+    </div>
+
+    <!-- Panel Dispatch -->
+    <div id="panel-dispatch" class="dash-panel" style="display:none">
+      <div class="dispatch-form">
+        <h3>📢 Kirim Permintaan Bantuan Darurat</h3>
+        <p style="font-size:0.85rem;color:var(--blue);margin-bottom:1rem">Sistem akan mencari relawan yang sesuai dan membantu kamu mengirim pesan WhatsApp ke mereka.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Lokasi Darurat <span>*</span></label>
+            <input class="form-input" id="dispatch-lokasi" type="text" placeholder="Nama daerah / alamat">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jenis Keahlian Dibutuhkan <span>*</span></label>
+            <select class="form-select" id="dispatch-jenis">
+              <option value="Medis">🏥 Medis</option>
+              <option value="Logistik">🚛 Logistik</option>
+              <option value="Teknik">🔧 Teknik</option>
+              <option value="Komunikasi">📻 Komunikasi</option>
+              <option value="Psikologi">🧠 Psikologi</option>
+              <option value="Lainnya">🤝 Lainnya</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deskripsi Situasi</label>
+          <input class="form-input" id="dispatch-deskripsi" type="text" placeholder="Jelaskan situasi darurat secara singkat">
+        </div>
+        <button class="btn-primary" onclick="kirimPermintaan()">
+          🔍 Cari & Hubungi Relawan via WhatsApp
+        </button>
+        <div id="dispatch-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/dashboard-relawan.js"></script>
+<script src="assets/js/dashboard-koordinator.js"></script>
+<script>
+  // ── Init berdasarkan role ─────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!requireLogin(['relawan','koordinator'])) return;
+    const session = getSession();
+    const role = session.role;
+
+    // Update role badge di nav
+    const roleBadge = document.getElementById('nav-role-badge');
+    if (roleBadge) {
+      roleBadge.textContent = role === 'koordinator' ? '🗺️ Koordinator' : '👤 Relawan';
+      roleBadge.className = `badge ${role === 'koordinator' ? 'badge-koord' : 'badge-relawan'}`;
+      roleBadge.style.padding = '6px 12px';
+    }
+
+    if (role === 'relawan') {
+      document.getElementById('dash-relawan').style.display = 'block';
+      document.getElementById('relawan-sub').textContent = `Selamat datang, ${session.Nama || session.nama || 'Relawan'}!`;
+      document.getElementById('r-kode-display').textContent = session.kode;
+      initDashboardRelawan();
+    } else if (role === 'koordinator') {
+      document.getElementById('dash-koordinator').style.display = 'block';
+      initDashboardKoordinator();
+    }
+  });
+
+  // Tab relawan
+  function loadTab(tab) {
+    document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dash-panel').forEach(p => p.style.display = 'none');
+    document.querySelector(`[data-tab="${tab}"]`)?.classList.add('active');
+    const panel = document.getElementById('panel-' + tab);
+    if (panel) panel.style.display = 'block';
+  }
+
+  // Tab koordinator
+  function loadTabK(tab) {
+    document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.dash-panel').forEach(p => p.style.display = 'none');
+    document.querySelector(`[data-tab="${tab}"]`)?.classList.add('active');
+    const panel = document.getElementById('panel-' + tab);
+    if (panel) panel.style.display = 'block';
+  }
+</script>
+</body>
+</html>
