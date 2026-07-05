@@ -4,393 +4,196 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SiapBencana — Direktori Relawan Darurat Indonesia</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  :root {
-    --red: #D93025;
-    --red-dark: #A51E15;
-    --red-light: #FDF0EF;
-    --red-mid: #F5C2BE;
-    --black: #0D0D0D;
-    --white: #FAFAF8;
-    --grey: #6B6B6B;
-    --grey-light: #F0EEEB;
-    --grey-border: #E0DDD8;
-    --green: #1A7A4A;
-    --green-light: #EAF5EE;
-    --amber: #C47B00;
-    --amber-light: #FFF8E6;
-  }
+:root {
+  --red:#D93025;--red-dark:#A51E15;--red-light:#FDF0EF;--red-mid:#F5C2BE;
+  --black:#0D0D0D;--white:#FAFAF8;--grey:#6B6B6B;--grey-light:#F5F4F2;
+  --grey-border:#E8E6E1;--green:#1A7A4A;--green-light:#EAF5EE;
+  --amber:#C47B00;--amber-light:#FFF8E6;--blue:#185FA5;--blue-light:#EBF3FB;
+  --purple:#534AB7;--purple-light:#EEEDFE;
+  --font:'Plus Jakarta Sans',sans-serif;
+  --radius:12px;--radius-lg:16px;--radius-xl:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:#F8F7F5;color:var(--black);min-height:100vh;overflow-x:hidden;}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* NAV */
+nav{position:sticky;top:0;z-index:200;background:rgba(250,250,248,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--grey-border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;}
+.nav-logo{font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--black);}
+.nav-logo span{color:var(--red);}
+.logo-dot{width:30px;height:30px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;animation:pulse 2s ease-in-out infinite;}
+.logo-dot svg{width:13px;fill:white;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(217,48,37,.35);}50%{box-shadow:0 0 0 8px rgba(217,48,37,0);}}
+.nav-tabs{display:flex;gap:4px;align-items:center;}
+.nav-tab{padding:7px 14px;border-radius:8px;font-size:.875rem;border:none;background:transparent;cursor:pointer;font-family:var(--font);font-weight:500;color:var(--grey);transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;}
+.nav-tab:hover,.nav-tab.active{background:var(--grey-light);color:var(--black);}
+.nav-tab.active{color:var(--red);}
+.nav-cta{background:var(--red)!important;color:white!important;margin-left:4px;}
+.nav-cta:hover{background:var(--red-dark)!important;}
+.nav-logout{background:var(--grey-light);color:var(--grey);}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--white);
-    color: var(--black);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+/* LIVE DOT */
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:blink 1.2s ease-in-out infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-  /* ── NOISE TEXTURE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 1000;
-  }
+/* SECTIONS */
+.section{display:none;}
+.section.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
 
-  /* ── NAV ── */
-  nav {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(250,250,248,0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--grey-border);
-    padding: 0 2rem;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 60px;
-  }
-  .nav-logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800; font-size: 1.2rem;
-    display: flex; align-items: center; gap: 8px;
-    text-decoration: none; color: var(--black);
-  }
-  .nav-logo span { color: var(--red); }
-  .logo-dot {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--red);
-    display: flex; align-items: center; justify-content: center;
-    animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(217,48,37,0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(217,48,37,0); }
-  }
-  .logo-dot svg { width: 14px; fill: white; }
-  .nav-tabs { display: flex; gap: 4px; }
-  .nav-tab {
-    padding: 6px 14px; border-radius: 6px; font-size: 0.875rem;
-    border: none; background: transparent; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; font-weight: 500; color: var(--grey);
-    transition: all 0.15s;
-  }
-  .nav-tab.active, .nav-tab:hover { background: var(--grey-light); color: var(--black); }
-  .nav-tab.active { color: var(--red); }
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--radius);font-size:.9rem;font-weight:600;font-family:var(--font);cursor:pointer;border:none;transition:all .15s;}
+.btn-red{background:var(--red);color:white;}.btn-red:hover{background:var(--red-dark);transform:translateY(-1px);}
+.btn-outline{background:white;color:var(--black);border:1.5px solid var(--grey-border);}.btn-outline:hover{border-color:var(--black);}
+.btn-green{background:var(--green);color:white;}.btn-green:hover{background:#145c38;}
+.btn-ghost{background:transparent;color:var(--grey);border:1.5px solid var(--grey-border);}.btn-ghost:hover{color:var(--black);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
 
-  /* ── HERO ── */
-  .hero {
-    padding: 5rem 2rem 4rem;
-    max-width: 900px; margin: 0 auto; text-align: center;
-    position: relative;
-  }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--red-light); border: 1px solid var(--red-mid);
-    color: var(--red-dark); border-radius: 99px;
-    padding: 5px 14px; font-size: 0.8rem; font-weight: 500;
-    margin-bottom: 1.5rem;
-    animation: fadeDown 0.6s ease both;
-  }
-  .live-dot {
-    width: 7px; height: 7px; border-radius: 50%; background: var(--red);
-    animation: blink 1.2s ease-in-out infinite;
-  }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+/* CARDS */
+.card{background:white;border:1px solid var(--grey-border);border-radius:var(--radius-lg);}
 
-  .hero h1 {
-    font-family: 'Syne', sans-serif;
-    font-size: clamp(2.4rem, 6vw, 4rem);
-    font-weight: 800; line-height: 1.1;
-    letter-spacing: -0.03em;
-    margin-bottom: 1.25rem;
-    animation: fadeUp 0.7s 0.1s ease both;
-  }
-  .hero h1 em { font-style: normal; color: var(--red); }
-  .hero p {
-    font-size: 1.05rem; color: var(--grey);
-    max-width: 560px; margin: 0 auto 2.5rem;
-    line-height: 1.7;
-    animation: fadeUp 0.7s 0.2s ease both;
-  }
-  .hero-cta {
-    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
-    animation: fadeUp 0.7s 0.3s ease both;
-  }
-  .btn-primary {
-    background: var(--red); color: white; border: none;
-    padding: 12px 28px; border-radius: 8px; font-size: 0.95rem;
-    font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif;
-    transition: all 0.15s; display: flex; align-items: center; gap: 8px;
-  }
-  .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); }
-  .btn-secondary {
-    background: transparent; color: var(--black);
-    border: 1.5px solid var(--grey-border);
-    padding: 12px 28px; border-radius: 8px; font-size: 0.95rem;
-    font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif;
-    transition: all 0.15s;
-  }
-  .btn-secondary:hover { border-color: var(--black); transform: translateY(-1px); }
+/* BADGES */
+.badge{display:inline-block;font-size:.72rem;padding:3px 10px;border-radius:99px;font-weight:600;}
+.badge-verified{background:var(--green-light);color:var(--green);}
+.badge-unverified{background:var(--grey-light);color:var(--grey);}
+.badge-siap{background:var(--green-light);color:var(--green);}
+.badge-terbatas{background:var(--amber-light);color:var(--amber);}
+.badge-nonaktif{background:#F3F4F6;color:#6B7280;}
+.skill-medis{background:#FDE8E8;color:#B91C1C;}
+.skill-logistik{background:#FEF3C7;color:#92400E;}
+.skill-teknik{background:#DBEAFE;color:#1E40AF;}
+.skill-komunikasi{background:#D1FAE5;color:#065F46;}
+.skill-psikologi{background:#EDE9FE;color:#5B21B6;}
+.skill-lainnya{background:#F3F4F6;color:#374151;}
+.av-medis{background:#FDE8E8;color:#B91C1C;}
+.av-logistik{background:#FEF3C7;color:#92400E;}
+.av-teknik{background:#DBEAFE;color:#1E40AF;}
+.av-komunikasi{background:#D1FAE5;color:#065F46;}
+.av-psikologi{background:#EDE9FE;color:#5B21B6;}
+.av-lainnya{background:#F3F4F6;color:#374151;}
 
-  /* ── STATS BAR ── */
-  .stats-bar {
-    display: flex; justify-content: center; gap: 0;
-    border: 1px solid var(--grey-border); border-radius: 12px;
-    max-width: 680px; margin: 3rem auto 0; overflow: hidden;
-    animation: fadeUp 0.7s 0.4s ease both;
-  }
-  .stat-item {
-    flex: 1; padding: 1.25rem 1rem; text-align: center;
-    border-right: 1px solid var(--grey-border);
-  }
-  .stat-item:last-child { border-right: none; }
-  .stat-num {
-    font-family: 'Syne', sans-serif; font-size: 1.6rem;
-    font-weight: 700; color: var(--black);
-  }
-  .stat-num span { color: var(--red); }
-  .stat-label { font-size: 0.78rem; color: var(--grey); margin-top: 2px; }
+/* FORM */
+.f-input,.f-select{width:100%;padding:11px 14px;border:1.5px solid var(--grey-border);border-radius:var(--radius);font-size:.95rem;font-family:var(--font);outline:none;transition:border-color .15s;background:white;}
+.f-input:focus,.f-select:focus{border-color:var(--red);}
+.f-label{display:block;font-size:.83rem;font-weight:600;margin-bottom:6px;}
+.f-label span{color:var(--red);}
+.f-group{margin-bottom:1.25rem;}
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 
-  /* ── SECTIONS ── */
-  .section { display: none; }
-  .section.active { display: block; }
+/* TOAST */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--black);color:white;padding:12px 20px;border-radius:var(--radius);font-size:.875rem;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
 
-  /* ── SEARCH SECTION ── */
-  .search-section {
-    max-width: 900px; margin: 0 auto; padding: 2rem;
-  }
-  .search-bar {
-    display: flex; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap;
-  }
-  .search-input {
-    flex: 1; min-width: 200px;
-    padding: 11px 16px; border: 1.5px solid var(--grey-border);
-    border-radius: 8px; font-size: 0.95rem;
-    font-family: 'DM Sans', sans-serif;
-    outline: none; transition: border-color 0.15s;
-    background: white;
-  }
-  .search-input:focus { border-color: var(--red); }
-  .search-select {
-    padding: 11px 16px; border: 1.5px solid var(--grey-border);
-    border-radius: 8px; font-size: 0.95rem;
-    font-family: 'DM Sans', sans-serif;
-    outline: none; background: white; cursor: pointer;
-    min-width: 160px;
-  }
-  .search-select:focus { border-color: var(--red); }
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:white;border-radius:var(--radius-xl);padding:2rem;max-width:460px;width:100%;animation:fadeUp .3s ease both;}
+.modal-box h3{font-size:1.1rem;font-weight:700;margin-bottom:.5rem;}
+.modal-box p{color:var(--grey);font-size:.9rem;line-height:1.6;margin-bottom:1.25rem;}
+.modal-btns{display:flex;gap:10px;}
+.modal-btns button{flex:1;padding:10px;border-radius:var(--radius);cursor:pointer;font-family:var(--font);font-size:.9rem;border:none;}
 
-  /* ── CARDS ── */
-  .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-  .relawan-card {
-    background: white; border: 1px solid var(--grey-border);
-    border-radius: 12px; padding: 1.25rem;
-    transition: all 0.2s; animation: fadeUp 0.4s ease both;
-    position: relative; overflow: hidden;
-  }
-  .relawan-card:hover { border-color: var(--red-mid); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
-  .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.85rem; }
-  .card-avatar {
-    width: 44px; height: 44px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; font-weight: 700;
-    font-family: 'Syne', sans-serif;
-    flex-shrink: 0;
-  }
-  .badge-verify {
-    font-size: 0.7rem; padding: 3px 8px; border-radius: 99px;
-    font-weight: 500;
-  }
-  .badge-verified { background: var(--green-light); color: var(--green); }
-  .badge-unverified { background: var(--grey-light); color: var(--grey); }
-  .card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 3px; }
-  .card-skill {
-    display: inline-block; font-size: 0.75rem; padding: 3px 10px;
-    border-radius: 99px; font-weight: 500; margin-bottom: 0.75rem;
-  }
-  .card-info { display: flex; flex-direction: column; gap: 5px; }
-  .card-info-row { display: flex; align-items: center; gap: 7px; font-size: 0.83rem; color: var(--grey); }
-  .card-info-row svg { width: 14px; opacity: 0.6; flex-shrink: 0; }
-  .card-kontak {
-    margin-top: 0.85rem; padding-top: 0.85rem;
-    border-top: 1px solid var(--grey-border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .kontak-num { font-size: 0.83rem; font-weight: 500; color: var(--black); }
-  .btn-kontak {
-    padding: 5px 12px; background: var(--red); color: white;
-    border: none; border-radius: 6px; font-size: 0.78rem;
-    cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500;
-  }
-  .btn-kontak:hover { background: var(--red-dark); }
-  .flag-btn {
-    position: absolute; top: 10px; right: 10px;
-    background: none; border: none; cursor: pointer;
-    color: var(--grey-border); font-size: 0.8rem; padding: 4px;
-    transition: color 0.15s;
-  }
-  .flag-btn:hover { color: var(--amber); }
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;padding:4rem;gap:12px;color:var(--grey);}
+.spinner{width:20px;height:20px;border:2px solid var(--grey-border);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:4rem 2rem;color:var(--grey);}
+.empty-icon{font-size:2.5rem;margin-bottom:1rem;}
+.empty h3{color:var(--black);margin-bottom:.4rem;}
 
-  /* skill colors */
-  .skill-medis { background: #FDE8E8; color: #B91C1C; }
-  .skill-logistik { background: #FEF3C7; color: #92400E; }
-  .skill-teknik { background: #DBEAFE; color: #1E40AF; }
-  .skill-komunikasi { background: #D1FAE5; color: #065F46; }
-  .skill-psikologi { background: #EDE9FE; color: #5B21B6; }
-  .skill-lainnya { background: #F3F4F6; color: #374151; }
+/* ═══════════════ HERO ═══════════════ */
+.hero{padding:5rem 2rem 4rem;max-width:860px;margin:0 auto;text-align:center;}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:var(--red-light);border:1px solid var(--red-mid);color:var(--red-dark);border-radius:99px;padding:5px 14px;font-size:.8rem;font-weight:600;margin-bottom:1.5rem;animation:fadeUp .6s ease both;}
+.hero h1{font-size:clamp(2.2rem,5.5vw,3.8rem);font-weight:800;line-height:1.1;letter-spacing:-.03em;margin-bottom:1.2rem;animation:fadeUp .7s .1s ease both;}
+.hero h1 em{font-style:normal;color:var(--red);}
+.hero p{font-size:1.05rem;color:var(--grey);max-width:540px;margin:0 auto 2.25rem;line-height:1.75;animation:fadeUp .7s .2s ease both;}
+.hero-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;animation:fadeUp .7s .3s ease both;}
+.stats-row{display:flex;justify-content:center;gap:0;border:1px solid var(--grey-border);border-radius:var(--radius-lg);max-width:640px;margin:3rem auto 0;overflow:hidden;background:white;animation:fadeUp .7s .4s ease both;}
+.stat-cell{flex:1;padding:1.25rem 1rem;text-align:center;border-right:1px solid var(--grey-border);}
+.stat-cell:last-child{border-right:none;}
+.stat-num{font-size:1.6rem;font-weight:800;color:var(--black);}
+.stat-label{font-size:.75rem;color:var(--grey);margin-top:3px;}
 
-  .avatar-medis { background: #FDE8E8; color: #B91C1C; }
-  .avatar-logistik { background: #FEF3C7; color: #92400E; }
-  .avatar-teknik { background: #DBEAFE; color: #1E40AF; }
-  .avatar-komunikasi { background: #D1FAE5; color: #065F46; }
-  .avatar-psikologi { background: #EDE9FE; color: #5B21B6; }
-  .avatar-lainnya { background: #F3F4F6; color: #374151; }
+/* ═══════════════ SEARCH / CARI ═══════════════ */
+.search-wrap{max-width:920px;margin:0 auto;padding:2rem 1.5rem;}
+.search-top{background:white;border:1px solid var(--grey-border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.25rem;}
+.search-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;}
+.search-row:last-child{margin-bottom:0;}
+.search-main{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;padding:11px 16px;border:1.5px solid var(--grey-border);border-radius:var(--radius);background:white;transition:border-color .15s;}
+.search-main:focus-within{border-color:var(--red);}
+.search-main input{border:none;outline:none;font-family:var(--font);font-size:.95rem;width:100%;background:transparent;}
+.search-main svg{opacity:.4;flex-shrink:0;}
+.f-select-sm{padding:10px 14px;border:1.5px solid var(--grey-border);border-radius:var(--radius);font-size:.875rem;font-family:var(--font);outline:none;background:white;cursor:pointer;min-width:150px;}
+.f-select-sm:focus{border-color:var(--red);}
 
-  /* ── EMPTY STATE ── */
-  .empty-state {
-    text-align: center; padding: 4rem 2rem; color: var(--grey);
-  }
-  .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
-  .empty-state h3 { font-family: 'Syne', sans-serif; color: var(--black); margin-bottom: 0.5rem; }
+/* MAP */
+#relawan-map{height:320px;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--grey-border);margin-bottom:1.25rem;display:none;}
 
-  /* ── LOADING ── */
-  .loading {
-    display: flex; align-items: center; justify-content: center;
-    padding: 4rem; gap: 12px; color: var(--grey);
-  }
-  .spinner {
-    width: 20px; height: 20px; border: 2px solid var(--grey-border);
-    border-top-color: var(--red); border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* MAP LOCATE BTN */
+.locate-btn{display:flex;align-items:center;gap:8px;padding:9px 18px;border-radius:var(--radius);background:var(--blue-light);color:var(--blue);border:1px solid #C0D8F0;font-size:.875rem;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.locate-btn:hover{background:#D4E8F8;}
 
-  /* ── FORM SECTION ── */
-  .form-wrap {
-    max-width: 600px; margin: 0 auto; padding: 2rem;
-  }
-  .form-header { margin-bottom: 2rem; }
-  .form-header h2 {
-    font-family: 'Syne', sans-serif; font-size: 1.6rem;
-    font-weight: 800; margin-bottom: 0.5rem;
-  }
-  .form-header p { color: var(--grey); font-size: 0.9rem; line-height: 1.6; }
-  .form-group { margin-bottom: 1.25rem; }
-  .form-label {
-    display: block; font-size: 0.85rem; font-weight: 500;
-    margin-bottom: 6px; color: var(--black);
-  }
-  .form-label span { color: var(--red); }
-  .form-input {
-    width: 100%; padding: 11px 14px;
-    border: 1.5px solid var(--grey-border); border-radius: 8px;
-    font-size: 0.95rem; font-family: 'DM Sans', sans-serif;
-    outline: none; transition: border-color 0.15s; background: white;
-  }
-  .form-input:focus { border-color: var(--red); }
-  .form-select {
-    width: 100%; padding: 11px 14px;
-    border: 1.5px solid var(--grey-border); border-radius: 8px;
-    font-size: 0.95rem; font-family: 'DM Sans', sans-serif;
-    outline: none; background: white; cursor: pointer;
-  }
-  .form-select:focus { border-color: var(--red); }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.r-card{background:white;border:1px solid var(--grey-border);border-radius:var(--radius-lg);padding:1.2rem;transition:all .2s;position:relative;overflow:hidden;animation:fadeUp .4s ease both;}
+.r-card:hover{border-color:var(--red-mid);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06);}
+.r-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.85rem;}
+.r-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.05rem;font-weight:800;flex-shrink:0;}
+.r-name{font-weight:700;font-size:.975rem;margin-bottom:3px;}
+.r-info{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--grey);}
+.r-info-row{display:flex;align-items:center;gap:6px;}
+.r-kontak{margin-top:.85rem;padding-top:.85rem;border-top:1px solid var(--grey-border);display:flex;align-items:center;justify-content:space-between;}
+.r-phone{font-size:.83rem;font-weight:600;}
+.flag-btn{position:absolute;top:10px;right:10px;background:none;border:none;cursor:pointer;color:var(--grey-border);font-size:.8rem;padding:4px;transition:color .15s;}
+.flag-btn:hover{color:var(--amber);}
+/* DISTANCE BADGE */
+.dist-badge{display:inline-block;background:var(--blue-light);color:var(--blue);font-size:.72rem;padding:3px 9px;border-radius:99px;font-weight:600;margin-left:6px;}
 
-  .form-info {
-    background: var(--red-light); border: 1px solid var(--red-mid);
-    border-radius: 10px; padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--red-dark);
-    line-height: 1.6;
-  }
-  .submit-btn {
-    width: 100%; padding: 14px; background: var(--red); color: white;
-    border: none; border-radius: 8px; font-size: 1rem;
-    font-weight: 500; font-family: 'DM Sans', sans-serif;
-    cursor: pointer; transition: all 0.15s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .submit-btn:hover { background: var(--red-dark); }
-  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+/* ═══════════════ DAFTAR FORM ═══════════════ */
+.form-wrap{max-width:580px;margin:0 auto;padding:2rem 1.5rem;}
+.form-header{margin-bottom:2rem;}
+.form-header h2{font-size:1.6rem;font-weight:800;margin-bottom:.5rem;}
+.form-header p{color:var(--grey);font-size:.9rem;line-height:1.6;}
+.form-info-box{background:var(--red-light);border:1px solid var(--red-mid);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:1.5rem;font-size:.85rem;color:var(--red-dark);line-height:1.6;}
+.submit-btn{width:100%;padding:14px;background:var(--red);color:white;border:none;border-radius:var(--radius);font-size:1rem;font-weight:700;font-family:var(--font);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.submit-btn:hover{background:var(--red-dark);}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+/* SUCCESS */
+.success-box{text-align:center;padding:3rem 1.5rem;animation:fadeUp .4s ease both;}
+.success-icon{width:72px;height:72px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1.5rem;}
+.success-box h3{font-size:1.4rem;font-weight:800;margin-bottom:.5rem;}
+.success-box p{color:var(--grey);margin-bottom:.75rem;line-height:1.6;}
+.kode-box{background:var(--grey-light);border-radius:var(--radius);padding:.75rem 1rem;margin:1rem 0;font-family:monospace;font-size:1.3rem;font-weight:800;letter-spacing:.1em;color:var(--red);text-align:center;}
+.success-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;}
 
-  /* ── SUCCESS STATE ── */
-  .success-state {
-    text-align: center; padding: 3rem 2rem;
-    animation: fadeUp 0.4s ease both;
-  }
-  .success-icon {
-    width: 72px; height: 72px; background: var(--green-light);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 2rem; margin: 0 auto 1.5rem;
-  }
-  .success-state h3 { font-family: 'Syne', sans-serif; font-size: 1.5rem; margin-bottom: 0.5rem; }
-  .success-state p { color: var(--grey); margin-bottom: 2rem; line-height: 1.6; }
+/* ═══════════════ TENTANG ═══════════════ */
+.about-wrap{max-width:760px;margin:0 auto;padding:2rem 1.5rem;}
+.about-wrap h2{font-size:1.5rem;font-weight:800;margin-bottom:1rem;}
+.about-wrap p{color:var(--grey);line-height:1.8;margin-bottom:1.2rem;}
+.about-hero{text-align:center;padding:2.5rem 0 2rem;}
+.about-hero h2{font-size:clamp(1.6rem,3.5vw,2.2rem);font-weight:800;line-height:1.2;letter-spacing:-.02em;margin-bottom:1rem;}
+.about-hero h2 em{font-style:normal;color:var(--red);}
+.about-hero p{font-size:.95rem;max-width:500px;margin:0 auto;}
+.value-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:2rem;}
+.value-card{background:white;border:1px solid var(--grey-border);border-radius:var(--radius-lg);padding:1.2rem;}
+.how-steps{display:flex;flex-direction:column;gap:12px;margin-bottom:2rem;}
+.how-step{display:flex;gap:14px;align-items:flex-start;}
+.how-num{width:32px;height:32px;background:var(--red);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;}
+.about-cta{text-align:center;padding:2rem;background:var(--grey-light);border-radius:var(--radius-xl);}
 
-  /* ── TOAST ── */
-  .toast {
-    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-    background: var(--black); color: white; padding: 12px 20px;
-    border-radius: 10px; font-size: 0.875rem; z-index: 999;
-    opacity: 0; transition: opacity 0.3s; pointer-events: none;
-    white-space: nowrap;
-  }
-  .toast.show { opacity: 1; }
-
-  /* ── MODAL ── */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    z-index: 200; display: none; align-items: center; justify-content: center;
-    padding: 1rem;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: white; border-radius: 16px; padding: 2rem;
-    max-width: 440px; width: 100%; animation: fadeUp 0.3s ease both;
-  }
-  .modal h3 { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 0.5rem; }
-  .modal p { color: var(--grey); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.25rem; }
-  .modal-btns { display: flex; gap: 10px; }
-  .modal-btns button { flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; }
-  .modal-cancel { background: var(--grey-light); border: none; color: var(--black); }
-  .modal-confirm { background: var(--amber); border: none; color: white; font-weight: 500; }
-
-  /* ── ABOUT ── */
-  .about-wrap { max-width: 780px; margin: 0 auto; padding: 2rem; }
-  .about-wrap h2 { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem; }
-  .about-wrap p { color: var(--grey); line-height: 1.8; margin-bottom: 1.25rem; }
-  .pipeline {
-    display: flex; gap: 0; margin: 2rem 0; overflow-x: auto;
-    border: 1px solid var(--grey-border); border-radius: 12px; overflow: hidden;
-  }
-  .pipe-step {
-    flex: 1; min-width: 120px; padding: 1.25rem 1rem; text-align: center;
-    border-right: 1px solid var(--grey-border);
-    background: white;
-  }
-  .pipe-step:last-child { border-right: none; }
-  .pipe-icon { font-size: 1.5rem; margin-bottom: 6px; }
-  .pipe-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.8rem; color: var(--red); margin-bottom: 4px; }
-  .pipe-desc { font-size: 0.75rem; color: var(--grey); line-height: 1.4; }
-
-  @media(max-width: 600px) {
-    .hero { padding: 3rem 1.25rem 2rem; }
-    .stats-bar { flex-direction: column; max-width: 100%; margin: 2rem 1.25rem 0; }
-    .stat-item { border-right: none; border-bottom: 1px solid var(--grey-border); }
-    .stat-item:last-child { border-bottom: none; }
-    .form-grid { grid-template-columns: 1fr; }
-    nav { padding: 0 1rem; }
-    .search-section, .form-wrap, .about-wrap { padding: 1.25rem; }
-  }
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media(max-width:600px){
+  nav{padding:0 1rem;}
+  .hero{padding:3rem 1.25rem 2rem;}
+  .stats-row{flex-direction:column;max-width:100%;margin:2rem 1.25rem 0;}
+  .stat-cell{border-right:none;border-bottom:1px solid var(--grey-border);}
+  .stat-cell:last-child{border-bottom:none;}
+  .f-grid{grid-template-columns:1fr;}
+  .search-wrap,.form-wrap,.about-wrap{padding:1.25rem;}
+}
 </style>
 </head>
 <body>
@@ -398,693 +201,710 @@
 <!-- NAV -->
 <nav>
   <a class="nav-logo" href="#">
-    <div class="logo-dot">
-      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
-    </div>
+    <div class="logo-dot"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div>
     Siap<span>Bencana</span>
   </a>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showSection('home')">Beranda</button>
-    <button class="nav-tab" onclick="showSection('cari')">Cari Relawan</button>
-    <button class="nav-tab" onclick="showSection('daftar')">Daftar</button>
-    <button class="nav-tab" onclick="showSection('tentang')">Tentang</button>
+    <button class="nav-tab active" onclick="goTo('home')">Beranda</button>
+    <button class="nav-tab" onclick="goTo('cari')">Cari Relawan</button>
+    <button class="nav-tab" onclick="goTo('daftar')">Daftar</button>
+    <button class="nav-tab" onclick="goTo('tentang')">Tentang</button>
     <a id="nav-login" class="nav-tab nav-cta" href="login.html">🔑 Login</a>
     <a id="nav-dashboard" class="nav-tab" href="dashboard.html" style="display:none"></a>
-    <button id="nav-logout" class="nav-tab nav-logout" onclick="logout()" style="display:none">Keluar</button>
+    <button id="nav-logout" class="nav-tab nav-logout" onclick="doLogout()" style="display:none">Keluar</button>
   </div>
 </nav>
 
-<!-- ═══════════════════════════════ HOME ═══════════════════════════════ -->
+<!-- ═══ HOME ═══ -->
 <div id="sec-home" class="section active">
   <div class="hero">
-    <div class="hero-badge">
-      <div class="live-dot"></div>
-      Database Relawan Darurat Indonesia
-    </div>
+    <div class="hero-badge"><div class="live-dot"></div> Database Relawan Darurat Indonesia</div>
     <h1>Temukan siapa yang bisa <em>membantu</em> saat krisis</h1>
-    <p>Platform crowdsourcing keahlian darurat warga Indonesia. Daftarkan keahlianmu sekarang — saat bencana terjadi, orang yang tepat bisa ditemukan dalam detik.</p>
+    <p>Platform crowdsourcing keahlian darurat warga Indonesia. Daftarkan keahlianmu — saat bencana terjadi, orang yang tepat bisa ditemukan dalam detik.</p>
     <div class="hero-cta">
-      <button class="btn-primary" onclick="showSection('daftar')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c5.33 0 8 2.67 8 4v2H4v-2c0-1.33 2.67-4 8-4z"/></svg>
+      <button class="btn btn-red" onclick="goTo('daftar')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c5.33 0 8 2.67 8 4v2H4v-2c0-1.33 2.67-4 8-4z"/></svg>
         Daftarkan Diri
       </button>
-      <button class="btn-secondary" onclick="showSection('cari')">Cari Relawan →</button>
+      <button class="btn btn-outline" onclick="goTo('cari')">Cari Relawan →</button>
     </div>
-    <div class="stats-bar">
-      <div class="stat-item">
-        <div class="stat-num" id="stat-total">–</div>
-        <div class="stat-label">Relawan Terdaftar</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num" id="stat-kota">–</div>
-        <div class="stat-label">Kota / Kabupaten</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-num" id="stat-verified">–</div>
-        <div class="stat-label">Sudah Terverifikasi</div>
-      </div>
+    <div class="stats-row">
+      <div class="stat-cell"><div class="stat-num" id="st-total">–</div><div class="stat-label">Relawan Terdaftar</div></div>
+      <div class="stat-cell"><div class="stat-num" id="st-kota">–</div><div class="stat-label">Kota / Kabupaten</div></div>
+      <div class="stat-cell"><div class="stat-num" id="st-verified">–</div><div class="stat-label">Terverifikasi</div></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════ CARI ═══════════════════════════════ -->
+<!-- ═══ CARI ═══ -->
 <div id="sec-cari" class="section">
-  <div class="search-section">
-    <div class="search-bar">
-      <input class="search-input" id="search-nama" type="text" placeholder="Cari nama atau keahlian..." oninput="filterCards()">
-      <select class="search-select" id="filter-kota" onchange="filterCards()">
-        <option value="">Semua Kota</option>
-      </select>
-      <select class="search-select" id="filter-skill" onchange="filterCards()">
-        <option value="">Semua Keahlian</option>
-        <option value="Medis">Medis</option>
-        <option value="Logistik">Logistik</option>
-        <option value="Teknik">Teknik</option>
-        <option value="Komunikasi">Komunikasi</option>
-        <option value="Psikologi">Psikologi</option>
-        <option value="Lainnya">Lainnya</option>
-      </select>
+  <div class="search-wrap">
+    <div class="search-top">
+      <div class="search-row">
+        <div class="search-main" style="flex:2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 1 0 8.5 15a6.5 6.5 0 0 0 4.19-1.53l.27.28v.79l5 5-1.5 1.5-5-5zm-6 0C7 14 5 12 5 9.5S7 5 9.5 5 14 7 14 9.5 12 14 9.5 14z"/></svg>
+          <input id="s-nama" type="text" placeholder="Cari nama atau keahlian..." oninput="doFilter()">
+        </div>
+        <select class="f-select-sm" id="s-kota" onchange="doFilter()"><option value="">Semua Kota</option></select>
+        <select class="f-select-sm" id="s-skill" onchange="doFilter()">
+          <option value="">Semua Keahlian</option>
+          <option value="Medis">🏥 Medis</option>
+          <option value="Logistik">🚛 Logistik</option>
+          <option value="Teknik">🔧 Teknik</option>
+          <option value="Komunikasi">📻 Komunikasi</option>
+          <option value="Psikologi">🧠 Psikologi</option>
+          <option value="Lainnya">🤝 Lainnya</option>
+        </select>
+      </div>
+      <div class="search-row" style="margin-bottom:0;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <button class="locate-btn" onclick="cariTerdekat()">
+          📍 Cari relawan terdekat dari lokasi saya
+        </button>
+        <button id="reset-loc" class="btn btn-ghost" style="padding:8px 14px;font-size:.82rem;display:none" onclick="resetLokasi()">✕ Reset lokasi</button>
+      </div>
     </div>
-    <div id="cards-container">
-      <div class="loading"><div class="spinner"></div> Memuat data relawan...</div>
-    </div>
+
+    <!-- PETA LEAFLET -->
+    <div id="relawan-map"></div>
+
+    <div id="result-count" style="font-size:.85rem;color:var(--grey);margin-bottom:1rem"></div>
+    <div id="cards-container"><div class="loading"><div class="spinner"></div> Memuat data relawan...</div></div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════ DAFTAR ═══════════════════════════════ -->
+<!-- ═══ DAFTAR ═══ -->
 <div id="sec-daftar" class="section">
   <div class="form-wrap">
     <div id="form-area">
       <div class="form-header">
         <h2>Daftarkan Keahlianmu</h2>
-        <p>Data kamu akan tersimpan di database online kami dan bisa ditemukan oleh koordinator darurat di seluruh Indonesia.</p>
+        <p>Data kamu tersimpan di database online dan bisa ditemukan koordinator darurat seluruh Indonesia.</p>
       </div>
-      <div class="form-info">
-        ⚠️ Data yang kamu isi akan tampil secara publik. Pastikan nomor kontak yang kamu masukkan aktif dan bisa dihubungi saat keadaan darurat.
-      </div>
-      <form id="reg-form" onsubmit="submitForm(event)">
-        <div class="form-group">
-          <label class="form-label">Nama Lengkap <span>*</span></label>
-          <input class="form-input" id="f-nama" type="text" placeholder="Nama lengkap kamu" required>
+      <div class="form-info-box">⚠️ Data yang kamu isi akan tampil secara publik. Pastikan nomor kontak aktif dan bisa dihubungi saat keadaan darurat.</div>
+      <form id="reg-form" onsubmit="submitDaftar(event)">
+        <div class="f-group">
+          <label class="f-label">Nama Lengkap <span>*</span></label>
+          <input class="f-input" id="f-nama" type="text" placeholder="Nama lengkap kamu" required>
         </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Provinsi <span>*</span></label>
-            <select class="form-select" id="f-provinsi" onchange="updateKotaOptions()" required>
+        <div class="f-grid">
+          <div class="f-group">
+            <label class="f-label">Provinsi <span>*</span></label>
+            <select class="f-select" id="f-provinsi" onchange="updateKota()" required>
               <option value="">Pilih provinsi...</option>
               <option value="Jabodetabek">📍 Jabodetabek</option>
-              <option value="Aceh">Aceh</option>
-              <option value="Bali">Bali</option>
-              <option value="Banten">Banten</option>
-              <option value="Bengkulu">Bengkulu</option>
-              <option value="DI Yogyakarta">DI Yogyakarta</option>
-              <option value="DKI Jakarta">DKI Jakarta</option>
-              <option value="Gorontalo">Gorontalo</option>
-              <option value="Jambi">Jambi</option>
-              <option value="Jawa Barat">Jawa Barat</option>
-              <option value="Jawa Tengah">Jawa Tengah</option>
-              <option value="Jawa Timur">Jawa Timur</option>
-              <option value="Kalimantan Barat">Kalimantan Barat</option>
-              <option value="Kalimantan Selatan">Kalimantan Selatan</option>
-              <option value="Kalimantan Tengah">Kalimantan Tengah</option>
-              <option value="Kalimantan Timur">Kalimantan Timur</option>
-              <option value="Kalimantan Utara">Kalimantan Utara</option>
-              <option value="Kepulauan Bangka Belitung">Kepulauan Bangka Belitung</option>
-              <option value="Kepulauan Riau">Kepulauan Riau</option>
-              <option value="Lampung">Lampung</option>
-              <option value="Maluku">Maluku</option>
-              <option value="Maluku Utara">Maluku Utara</option>
-              <option value="Nusa Tenggara Barat">Nusa Tenggara Barat</option>
-              <option value="Nusa Tenggara Timur">Nusa Tenggara Timur</option>
-              <option value="Papua">Papua</option>
-              <option value="Papua Barat">Papua Barat</option>
-              <option value="Papua Barat Daya">Papua Barat Daya</option>
-              <option value="Papua Pegunungan">Papua Pegunungan</option>
-              <option value="Papua Selatan">Papua Selatan</option>
-              <option value="Papua Tengah">Papua Tengah</option>
-              <option value="Riau">Riau</option>
-              <option value="Sulawesi Barat">Sulawesi Barat</option>
-              <option value="Sulawesi Selatan">Sulawesi Selatan</option>
-              <option value="Sulawesi Tengah">Sulawesi Tengah</option>
-              <option value="Sulawesi Tenggara">Sulawesi Tenggara</option>
-              <option value="Sulawesi Utara">Sulawesi Utara</option>
-              <option value="Sumatera Barat">Sumatera Barat</option>
-              <option value="Sumatera Selatan">Sumatera Selatan</option>
-              <option value="Sumatera Utara">Sumatera Utara</option>
+              <option value="Aceh">Aceh</option><option value="Bali">Bali</option>
+              <option value="Banten">Banten</option><option value="Bengkulu">Bengkulu</option>
+              <option value="DI Yogyakarta">DI Yogyakarta</option><option value="DKI Jakarta">DKI Jakarta</option>
+              <option value="Gorontalo">Gorontalo</option><option value="Jambi">Jambi</option>
+              <option value="Jawa Barat">Jawa Barat</option><option value="Jawa Tengah">Jawa Tengah</option>
+              <option value="Jawa Timur">Jawa Timur</option><option value="Kalimantan Barat">Kalimantan Barat</option>
+              <option value="Kalimantan Selatan">Kalimantan Selatan</option><option value="Kalimantan Tengah">Kalimantan Tengah</option>
+              <option value="Kalimantan Timur">Kalimantan Timur</option><option value="Kalimantan Utara">Kalimantan Utara</option>
+              <option value="Kepulauan Bangka Belitung">Kep. Bangka Belitung</option><option value="Kepulauan Riau">Kepulauan Riau</option>
+              <option value="Lampung">Lampung</option><option value="Maluku">Maluku</option>
+              <option value="Maluku Utara">Maluku Utara</option><option value="Nusa Tenggara Barat">NTB</option>
+              <option value="Nusa Tenggara Timur">NTT</option><option value="Papua">Papua</option>
+              <option value="Papua Barat">Papua Barat</option><option value="Riau">Riau</option>
+              <option value="Sulawesi Barat">Sulawesi Barat</option><option value="Sulawesi Selatan">Sulawesi Selatan</option>
+              <option value="Sulawesi Tengah">Sulawesi Tengah</option><option value="Sulawesi Tenggara">Sulawesi Tenggara</option>
+              <option value="Sulawesi Utara">Sulawesi Utara</option><option value="Sumatera Barat">Sumatera Barat</option>
+              <option value="Sumatera Selatan">Sumatera Selatan</option><option value="Sumatera Utara">Sumatera Utara</option>
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label">Kota / Kabupaten <span>*</span></label>
-            <select class="form-select" id="f-kota" required disabled>
+          <div class="f-group">
+            <label class="f-label">Kota / Kabupaten <span>*</span></label>
+            <select class="f-select" id="f-kota" required disabled>
               <option value="">Pilih provinsi dulu...</option>
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Kategori Keahlian <span>*</span></label>
-          <select class="form-select" id="f-skill" required>
+        <div class="f-group">
+          <label class="f-label">Kategori Keahlian <span>*</span></label>
+          <select class="f-select" id="f-skill" required>
             <option value="">Pilih kategori...</option>
             <option value="Medis">🏥 Medis (dokter, perawat, bidan, paramedis)</option>
             <option value="Logistik">🚛 Logistik (pengemudi, distribusi bantuan)</option>
             <option value="Teknik">🔧 Teknik (listrik, bangunan, mekanik)</option>
             <option value="Komunikasi">📻 Komunikasi (operator radio, IT, media)</option>
             <option value="Psikologi">🧠 Psikologi (konselor trauma, pendamping jiwa)</option>
-            <option value="Lainnya">🤝 Lainnya (masak, jahit, SAR, dll)</option>
+            <option value="Lainnya">🤝 Lainnya (masak, SAR, dll)</option>
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label">Detail Keahlian</label>
-          <input class="form-input" id="f-detail" type="text" placeholder="cth: Dokter umum, pengalaman 5 tahun">
+        <div class="f-group">
+          <label class="f-label">Detail Keahlian</label>
+          <input class="f-input" id="f-detail" type="text" placeholder="cth: Dokter umum, pengalaman 5 tahun">
         </div>
-        <div class="form-group">
-          <label class="form-label">Nomor Kontak Darurat <span>*</span></label>
-          <input class="form-input" id="f-kontak" type="tel" placeholder="cth: 081234567890" required>
+        <div class="f-group">
+          <label class="f-label">Nomor Kontak Darurat <span>*</span></label>
+          <input class="f-input" id="f-kontak" type="tel" placeholder="cth: 081234567890" required>
         </div>
-        <div class="form-group">
-          <label class="form-label">Ketersediaan</label>
-          <select class="form-select" id="f-status">
+        <div class="f-group">
+          <label class="f-label">Ketersediaan</label>
+          <select class="f-select" id="f-status">
             <option value="Siap">✅ Siap dipanggil kapanpun</option>
-            <option value="Terbatas">⏰ Terbatas (perlu konfirmasi dulu)</option>
+            <option value="Terbatas">⏰ Terbatas (perlu konfirmasi)</option>
             <option value="Tidak Aktif">❌ Sementara tidak aktif</option>
           </select>
         </div>
-        <button class="submit-btn" type="submit" id="submit-btn">
+        <!-- FITUR ROADMAP: Verifikasi KTP (skeleton code - butuh Verihubs API) -->
+        <div class="f-group" style="background:var(--grey-light);border-radius:var(--radius);padding:1rem;border:1px dashed var(--grey-border)">
+          <label class="f-label" style="color:var(--grey)">📎 Upload Dokumen Keahlian <span style="background:var(--amber-light);color:var(--amber);font-size:.7rem;padding:2px 8px;border-radius:99px;margin-left:6px">Segera Hadir</span></label>
+          <p style="font-size:.8rem;color:var(--grey);margin-top:4px">Verifikasi otomatis via STR/KTP akan tersedia. Untuk saat ini, verifikasi dilakukan manual oleh admin.</p>
+        </div>
+        <button class="submit-btn" type="submit" id="daftar-btn">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
           Daftarkan Sekarang
         </button>
       </form>
     </div>
     <div id="success-area" style="display:none">
-      <div class="success-state">
+      <div class="success-box">
         <div class="success-icon">✅</div>
         <h3>Berhasil Terdaftar!</h3>
-        <p>Data kamu sudah masuk ke database SiapBencana. Terima kasih sudah siap membantu. Data kamu bisa ditemukan oleh koordinator darurat di seluruh Indonesia.</p>
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <button class="btn-primary" onclick="goToCari()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 1 0 8.5 15a6.5 6.5 0 0 0 4.19-1.53l.27.28v.79l5 5-1.5 1.5-5-5zm-6 0C7 14 5 12 5 9.5S7 5 9.5 5 14 7 14 9.5 12 14 9.5 14z"/></svg>
-            Lihat di Direktori
-          </button>
-          <button class="btn-secondary" onclick="resetForm()">Daftarkan Orang Lain</button>
+        <p>Data kamu sudah masuk ke database SiapBencana.<br>Simpan kode unik ini — kamu butuhkan untuk login!</p>
+        <div class="kode-box" id="kode-display">SB-??????</div>
+        <p style="font-size:.8rem;color:var(--grey)">Screenshot atau catat kode ini sekarang. Kode tidak bisa diulang!</p>
+        <div class="success-cta">
+          <button class="btn btn-red" onclick="goToLogin()">🔑 Login dengan Kode Ini</button>
+          <button class="btn btn-outline" onclick="resetDaftar()">Daftarkan Orang Lain</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════ TENTANG ═══════════════════════════════ -->
+<!-- ═══ TENTANG ═══ -->
 <div id="sec-tentang" class="section">
   <div class="about-wrap">
-
-    <!-- HERO TENTANG -->
-    <div style="text-align:center;padding:2rem 0 2.5rem">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--red-light);border:1px solid var(--red-mid);color:var(--red-dark);border-radius:99px;padding:5px 16px;font-size:0.8rem;font-weight:500;margin-bottom:1.25rem">
-        <div class="live-dot"></div> Platform Crowdsourcing Darurat Indonesia
-      </div>
-      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;line-height:1.2;letter-spacing:-0.02em;margin-bottom:1rem">
-        Saat bencana terjadi,<br><em style="font-style:normal;color:var(--red)">detik-detik pertama</em> sangat menentukan
-      </h2>
-      <p style="color:var(--grey);max-width:520px;margin:0 auto;line-height:1.75;font-size:0.95rem">
-        SiapBencana adalah direktori keahlian darurat warga Indonesia yang bisa diakses siapa saja, kapan saja — agar orang yang tepat bisa ditemukan dalam hitungan detik, bukan jam.
-      </p>
+    <div class="about-hero">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--red-light);border:1px solid var(--red-mid);color:var(--red-dark);border-radius:99px;padding:5px 16px;font-size:.8rem;font-weight:600;margin-bottom:1.25rem"><div class="live-dot"></div> Platform Crowdsourcing Darurat Indonesia</div>
+      <h2>Saat bencana terjadi,<br><em>detik-detik pertama</em> sangat menentukan</h2>
+      <p style="color:var(--grey);line-height:1.75;font-size:.95rem;margin-top:.75rem">SiapBencana adalah direktori keahlian darurat warga Indonesia — agar orang yang tepat bisa ditemukan dalam hitungan detik, bukan jam.</p>
     </div>
-
-    <!-- 3 NILAI UTAMA -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:2.5rem">
-      <div style="background:white;border:1px solid var(--grey-border);border-radius:12px;padding:1.25rem">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem">⚡</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:0.4rem">Cepat & Real-Time</div>
-        <div style="font-size:0.83rem;color:var(--grey);line-height:1.6">Data relawan tersedia langsung begitu seseorang mendaftar. Tidak ada delay, tidak ada admin yang harus input manual.</div>
-      </div>
-      <div style="background:white;border:1px solid var(--grey-border);border-radius:12px;padding:1.25rem">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem">🌐</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:0.4rem">Bisa Diakses Siapapun</div>
-        <div style="font-size:0.83rem;color:var(--grey);line-height:1.6">Tidak perlu install aplikasi. Cukup buka browser dari HP manapun — direktori langsung bisa digunakan.</div>
-      </div>
-      <div style="background:white;border:1px solid var(--grey-border);border-radius:12px;padding:1.25rem">
-        <div style="font-size:1.5rem;margin-bottom:0.5rem">🤝</div>
-        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;margin-bottom:0.4rem">Dibuat Bersama Warga</div>
-        <div style="font-size:0.83rem;color:var(--grey);line-height:1.6">Database ini tumbuh dari kontribusi sukarela warga. Semakin banyak yang daftar, semakin kuat jaringan bantuan kita.</div>
-      </div>
+    <div class="value-grid">
+      <div class="value-card"><div style="font-size:1.5rem;margin-bottom:.5rem">⚡</div><div style="font-weight:700;font-size:.95rem;margin-bottom:.3rem">Cepat & Real-Time</div><div style="font-size:.83rem;color:var(--grey);line-height:1.6">Data tersedia langsung begitu seseorang mendaftar.</div></div>
+      <div class="value-card"><div style="font-size:1.5rem;margin-bottom:.5rem">🌐</div><div style="font-weight:700;font-size:.95rem;margin-bottom:.3rem">Bisa Diakses Siapapun</div><div style="font-size:.83rem;color:var(--grey);line-height:1.6">Tidak perlu install aplikasi. Cukup buka browser dari HP manapun.</div></div>
+      <div class="value-card"><div style="font-size:1.5rem;margin-bottom:.5rem">📍</div><div style="font-weight:700;font-size:.95rem;margin-bottom:.3rem">Temukan Relawan Terdekat</div><div style="font-size:.83rem;color:var(--grey);line-height:1.6">Peta real-time tunjukkan relawan terdekat dari lokasi kamu.</div></div>
     </div>
-
-    <!-- MASALAH YANG DIPECAHKAN -->
-    <div style="background:var(--red-light);border:1px solid var(--red-mid);border-radius:12px;padding:1.5rem;margin-bottom:2rem">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:0.75rem;color:var(--red-dark)">Masalah yang SiapBencana coba selesaikan</div>
+    <div style="background:var(--red-light);border:1px solid var(--red-mid);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:2rem">
+      <div style="font-weight:700;margin-bottom:.75rem;color:var(--red-dark)">Masalah yang SiapBencana selesaikan</div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="font-size:1rem;flex-shrink:0">❌</span>
-          <span style="font-size:0.875rem;color:var(--red-dark);line-height:1.6"><strong>Tanpa SiapBencana:</strong> Saat bencana, koordinator telfon sana-sini, WA grup, nunggu reply — butuh berjam-jam hanya untuk tahu siapa dokter terdekat.</span>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start">
-          <span style="font-size:1rem;flex-shrink:0">✅</span>
-          <span style="font-size:0.875rem;color:var(--red-dark);line-height:1.6"><strong>Dengan SiapBencana:</strong> Filter kota + keahlian → dalam 10 detik muncul daftar nama dan nomor yang bisa langsung dihubungi.</span>
-        </div>
+        <div style="display:flex;gap:10px"><span>❌</span><span style="font-size:.875rem;color:var(--red-dark);line-height:1.6"><strong>Tanpa SiapBencana:</strong> Koordinator telepon satu-satu, WA grup, nunggu reply — berjam-jam hanya untuk tahu siapa dokter terdekat.</span></div>
+        <div style="display:flex;gap:10px"><span>✅</span><span style="font-size:.875rem;color:var(--red-dark);line-height:1.6"><strong>Dengan SiapBencana:</strong> Filter kota + keahlian → dalam 10 detik muncul daftar lengkap dengan nomor kontak darurat.</span></div>
       </div>
     </div>
-
-    <!-- CARA KERJA -->
-    <h2 style="font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;margin-bottom:1rem">Bagaimana cara kerjanya?</h2>
-    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:2rem">
-      <div style="display:flex;gap:14px;align-items:flex-start">
-        <div style="width:32px;height:32px;background:var(--red);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;flex-shrink:0">1</div>
-        <div>
-          <div style="font-weight:500;font-size:0.9rem;margin-bottom:2px">Warga daftarkan diri & keahlian</div>
-          <div style="font-size:0.83rem;color:var(--grey);line-height:1.6">Isi form singkat: nama, kota, kategori keahlian, dan nomor darurat. Selesai dalam 2 menit.</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:14px;align-items:flex-start">
-        <div style="width:32px;height:32px;background:var(--red);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;flex-shrink:0">2</div>
-        <div>
-          <div style="font-weight:500;font-size:0.9rem;margin-bottom:2px">Data tersimpan otomatis di cloud</div>
-          <div style="font-size:0.83rem;color:var(--grey);line-height:1.6">Begitu form di-submit, data langsung masuk ke database online. Tidak ada admin yang harus copy-paste manual.</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:14px;align-items:flex-start">
-        <div style="width:32px;height:32px;background:var(--red);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;flex-shrink:0">3</div>
-        <div>
-          <div style="font-weight:500;font-size:0.9rem;margin-bottom:2px">Koordinator cari relawan saat dibutuhkan</div>
-          <div style="font-size:0.83rem;color:var(--grey);line-height:1.6">Filter by kota dan keahlian. Hasil muncul seketika lengkap dengan nomor kontak darurat.</div>
-        </div>
-      </div>
+    <h2 style="margin-bottom:1rem">Bagaimana cara kerjanya?</h2>
+    <div class="how-steps">
+      <div class="how-step"><div class="how-num">1</div><div><div style="font-weight:600;font-size:.9rem;margin-bottom:2px">Warga daftarkan diri & keahlian</div><div style="font-size:.83rem;color:var(--grey);line-height:1.6">Isi form singkat — selesai 2 menit. Data langsung masuk ke database cloud.</div></div></div>
+      <div class="how-step"><div class="how-num">2</div><div><div style="font-weight:600;font-size:.9rem;margin-bottom:2px">Data tersimpan otomatis di cloud</div><div style="font-size:.83rem;color:var(--grey);line-height:1.6">Tidak ada admin yang perlu input manual. Sinkron ke semua perangkat seketika.</div></div></div>
+      <div class="how-step"><div class="how-num">3</div><div><div style="font-weight:600;font-size:.9rem;margin-bottom:2px">Koordinator cari relawan terdekat</div><div style="font-size:.83rem;color:var(--grey);line-height:1.6">Filter kota + keahlian, atau gunakan GPS untuk cari yang terdekat dari lokasi bencana.</div></div></div>
     </div>
-
-    <!-- CTA -->
-    <div style="text-align:center;padding:2rem;background:var(--grey-light);border-radius:14px">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;margin-bottom:0.5rem">Siap berkontribusi?</div>
-      <p style="color:var(--grey);font-size:0.875rem;margin-bottom:1.25rem">Daftarkan keahlianmu sekarang — gratis, sukarela, dan bisa menyelamatkan nyawa.</p>
-      <button class="btn-primary" onclick="showSection('daftar')" style="margin:0 auto">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c5.33 0 8 2.67 8 4v2H4v-2c0-1.33 2.67-4 8-4z"/></svg>
+    <div class="about-cta">
+      <div style="font-weight:800;font-size:1.1rem;margin-bottom:.5rem">Siap berkontribusi?</div>
+      <p style="color:var(--grey);font-size:.875rem;margin-bottom:1.25rem">Daftarkan keahlianmu — gratis, sukarela, bisa menyelamatkan nyawa.</p>
+      <button class="btn btn-red" onclick="goTo('daftar')" style="margin:0 auto">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M12 2a5 5 0 1 1 0 10A5 5 0 0 1 12 2zm0 12c5.33 0 8 2.67 8 4v2H4v-2c0-1.33 2.67-4 8-4z"/></svg>
         Daftarkan Diri Sekarang
       </button>
     </div>
-
   </div>
 </div>
 
-<!-- ═══════════ MODAL FLAG ═══════════ -->
-<div class="modal-overlay" id="flag-modal">
-  <div class="modal">
+<!-- MODAL FLAG -->
+<div class="modal-overlay" id="modal-flag">
+  <div class="modal-box">
     <h3>🚩 Laporkan Data Ini?</h3>
-    <p>Kamu akan melaporkan profil ini sebagai informasi yang tidak akurat atau mencurigakan. Jika cukup banyak laporan masuk, data ini akan direview oleh admin.</p>
+    <p>Kamu akan melaporkan profil ini sebagai informasi tidak akurat. Jika 3+ laporan masuk, data akan direview admin.</p>
     <div class="modal-btns">
-      <button class="modal-cancel" onclick="closeFlag()">Batal</button>
-      <button class="modal-confirm" onclick="confirmFlag()">Ya, Laporkan</button>
+      <button style="background:var(--grey-light);color:var(--black)" onclick="closeFlag()">Batal</button>
+      <button style="background:var(--amber);color:white;font-weight:600" onclick="confirmFlag()">Ya, Laporkan</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
+<!-- MODAL WA (Roadmap feature skeleton) -->
+<div class="modal-overlay" id="modal-wa">
+  <div class="modal-box">
+    <h3>📱 Kirim Notifikasi WhatsApp</h3>
+    <p>Fitur ini akan mengirim pesan WhatsApp otomatis ke relawan terdekat saat bencana terjadi.<br><span style="background:var(--amber-light);color:var(--amber);font-size:.75rem;padding:2px 8px;border-radius:99px;font-weight:600">Membutuhkan integrasi Fonnte/Twilio API</span></p>
+    <div class="f-group"><label class="f-label">Pesan darurat</label><input class="f-input" id="wa-msg" type="text" placeholder="Deskripsi situasi darurat..."></div>
+    <div class="modal-btns">
+      <button style="background:var(--grey-light);color:var(--black)" onclick="document.getElementById('modal-wa').classList.remove('open')">Tutup</button>
+      <button style="background:#25D366;color:white;font-weight:600" onclick="simulasiWA()">📤 Simulasi Kirim WA</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// KONFIGURASI — Ganti URL ini setelah deploy Apps Script
-// ═══════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = "PASTE_URL_APPS_SCRIPT_KAMU_DISINI";
-const USE_DUMMY = APPS_SCRIPT_URL === "PASTE_URL_APPS_SCRIPT_KAMU_DISINI";
+// ════════════════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════════════════
+const API_URL = "https://script.google.com/macros/s/AKfycbxlDMncmReEDRAeNyIGi8v1qv4g_oBfqLNIfxY2iz_10uUdFno6Lo1fke058DZNcoxx/exec";
+const USE_DUMMY = API_URL === "PASTE_URL_APPS_SCRIPT_KAMU_DISINI";
 
-// ═══════════════════════════════════════════════════════════
-// DATA DUMMY — untuk demo sebelum backend tersambung
-// ═══════════════════════════════════════════════════════════
-const DUMMY_DATA = [
-  { Nama:"Dr. Rina Kusumawati", Kota:"Bogor", Provinsi:"Jawa Barat", Keahlian:"Medis", Detail:"Dokter Umum, Puskesmas Bogor Tengah", Kontak:"081234567890", Status:"Siap", Verified:"TRUE", Flags:"0" },
-  { Nama:"Budi Santoso", Kota:"Cianjur", Provinsi:"Jawa Barat", Keahlian:"Logistik", Detail:"Pengemudi truk 10 tahun, siap evakuasi", Kontak:"082345678901", Status:"Siap", Verified:"TRUE", Flags:"0" },
-  { Nama:"Sari Dewi", Kota:"Bandung", Provinsi:"Jawa Barat", Keahlian:"Psikologi", Detail:"Psikolog klinis, spesialis trauma bencana", Kontak:"083456789012", Status:"Siap", Verified:"FALSE", Flags:"0" },
-  { Nama:"Ahmad Fauzi", Kota:"Jakarta Selatan", Provinsi:"DKI Jakarta", Keahlian:"Teknik", Detail:"Teknisi listrik PLN, siap perbaikan darurat", Kontak:"084567890123", Status:"Terbatas", Verified:"TRUE", Flags:"0" },
-  { Nama:"Lestari Ningrum", Kota:"Bogor", Provinsi:"Jawa Barat", Keahlian:"Komunikasi", Detail:"Operator radio amatir ORARI, bisa koordinasi lapangan", Kontak:"085678901234", Status:"Siap", Verified:"FALSE", Flags:"0" },
-  { Nama:"Hendra Wijaya", Kota:"Depok", Provinsi:"Jawa Barat", Keahlian:"Medis", Detail:"Perawat IGD RS Universitas Indonesia", Kontak:"086789012345", Status:"Siap", Verified:"TRUE", Flags:"0" },
-  { Nama:"Fitriani", Kota:"Sukabumi", Provinsi:"Jawa Barat", Keahlian:"Lainnya", Detail:"Koordinator dapur umum, bisa masak untuk 200 orang", Kontak:"087890123456", Status:"Siap", Verified:"FALSE", Flags:"0" },
-  { Nama:"Rudi Hermawan", Kota:"Bogor", Provinsi:"Jawa Barat", Keahlian:"Teknik", Detail:"Arsitek, bisa asesmen bangunan rusak", Kontak:"088901234567", Status:"Terbatas", Verified:"FALSE", Flags:"0" },
-  { Nama:"Ns. Dina Marlina", Kota:"Bekasi", Provinsi:"Jawa Barat", Keahlian:"Medis", Detail:"Bidan komunitas, spesialis ibu dan anak", Kontak:"089012345678", Status:"Siap", Verified:"TRUE", Flags:"0" },
-  { Nama:"Yanuar Pratama", Kota:"Jakarta Timur", Provinsi:"DKI Jakarta", Keahlian:"Logistik", Detail:"Punya pickup double cabin, bisa angkut 1 ton", Kontak:"081122334455", Status:"Siap", Verified:"FALSE", Flags:"0" },
-  { Nama:"Citra Puspita", Kota:"Tangerang", Provinsi:"Banten", Keahlian:"Komunikasi", Detail:"Jurnalis lapangan, bisa dokumentasi dan siaran darurat", Kontak:"082233445566", Status:"Siap", Verified:"TRUE", Flags:"0" },
-  { Nama:"Pak Sutrisno", Kota:"Cianjur", Provinsi:"Jawa Barat", Keahlian:"Teknik", Detail:"Tukang bangunan 20 tahun, perbaikan cepat", Kontak:"083344556677", Status:"Siap", Verified:"FALSE", Flags:"0" },
+// ════════════════════════════════════════════════════════════════
+// KOORDINAT KOTA (untuk fitur peta terdekat)
+// ════════════════════════════════════════════════════════════════
+const KOTA_COORDS = {
+  "Bogor":{lat:-6.5971,lng:106.8060},"Jakarta Selatan":{lat:-6.2615,lng:106.8106},
+  "Jakarta Pusat":{lat:-6.1862,lng:106.8340},"Jakarta Barat":{lat:-6.1674,lng:106.7637},
+  "Jakarta Timur":{lat:-6.2250,lng:106.9004},"Jakarta Utara":{lat:-6.1481,lng:106.8998},
+  "Depok":{lat:-6.4025,lng:106.7942},"Bekasi":{lat:-6.2349,lng:106.9896},
+  "Tangerang":{lat:-6.1781,lng:106.6297},"Tangerang Selatan":{lat:-6.2887,lng:106.7107},
+  "Bandung":{lat:-6.9175,lng:107.6191},"Cianjur":{lat:-6.8215,lng:107.1425},
+  "Sukabumi":{lat:-6.9277,lng:106.9301},"Garut":{lat:-7.2100,lng:107.9060},
+  "Tasikmalaya":{lat:-7.3274,lng:108.2207},"Cirebon":{lat:-6.7320,lng:108.5523},
+  "Surabaya":{lat:-7.2575,lng:112.7521},"Malang":{lat:-7.9797,lng:112.6304},
+  "Yogyakarta":{lat:-7.7956,lng:110.3695},"Semarang":{lat:-6.9932,lng:110.4203},
+  "Solo":{lat:-7.5562,lng:110.8315},"Medan":{lat:3.5952,lng:98.6722},
+  "Palembang":{lat:-2.9761,lng:104.7754},"Makassar":{lat:-5.1477,lng:119.4327},
+  "Denpasar":{lat:-8.6705,lng:115.2126},"Pekanbaru":{lat:0.5071,lng:101.4478},
+  "Banjarmasin":{lat:-3.3194,lng:114.5908},"Pontianak":{lat:-0.0263,lng:109.3425},
+  "Samarinda":{lat:-0.5016,lng:117.1537},"Manado":{lat:1.4748,lng:124.8421},
+  "Padang":{lat:-0.9471,lng:100.4172},"Ambon":{lat:-3.6954,lng:128.1814},
+  "Jayapura":{lat:-2.5916,lng:140.6690},"Mataram":{lat:-8.5833,lng:116.1167},
+  "Kupang":{lat:-10.1718,lng:123.6075},"Kendari":{lat:-3.9985,lng:122.5130},
+  "Palu":{lat:-0.8917,lng:119.8707},"Gorontalo":{lat:.5435,lng:123.0594},
+  "Banda Aceh":{lat:5.5483,lng:95.3238},"Bengkulu":{lat:-3.8004,lng:102.2655},
+  "Jambi":{lat:-1.6101,lng:103.6131},"Bandar Lampung":{lat:-5.3971,lng:105.2668},
+  "Serang":{lat:-6.1100,lng:106.1578},"Cilegon":{lat:-6.0027,lng:106.0009},
+  "Karawang":{lat:-6.3046,lng:107.3301},"Bekasi (Kab)":{lat:-6.3449,lng:107.1200},
+  "Kabupaten Bogor":{lat:-6.5943,lng:106.9576},"Ciamis":{lat:-7.3300,lng:108.3500},
+  "Purwakarta":{lat:-6.5566,lng:107.4456},"Subang":{lat:-6.5704,lng:107.7594},
+  "Indramayu":{lat:-6.3270,lng:108.3228},"Kuningan":{lat:-6.9760,lng:108.4750},
+  "Majalengka":{lat:-6.8362,lng:108.2272},"Sumedang":{lat:-6.8547,lng:107.9216},
+  "Ciawi":{lat:-6.6918,lng:106.8973},"Cileungsi":{lat:-6.5068,lng:106.9712},
+  "Lembang":{lat:-6.8146,lng:107.6226},"Serpong":{lat:-6.3194,lng:106.6633},
+  "Pamulang":{lat:-6.3542,lng:106.7332},"Ciputat":{lat:-6.3155,lng:106.7507},
+};
+
+// ════════════════════════════════════════════════════════════════
+// DATA KOTA PER PROVINSI
+// ════════════════════════════════════════════════════════════════
+const KOTA_DATA = {
+  "Jabodetabek":["Jakarta Pusat","Jakarta Selatan","Jakarta Barat","Jakarta Timur","Jakarta Utara","Bogor","Depok","Tangerang","Tangerang Selatan","Bekasi","Kabupaten Bogor","Kabupaten Tangerang","Kabupaten Bekasi","Serpong","Pamulang","Ciputat","Cileungsi","Ciawi","Lembang","Gunung Putri","Cibinong","Bojonggede","Parung"],
+  "Banten":["Cilegon","Serang","Tangerang","Tangerang Selatan","Kabupaten Lebak","Kabupaten Pandeglang","Kabupaten Tangerang","Kabupaten Serang","Serpong","Pamulang","Ciputat"],
+  "DKI Jakarta":["Jakarta Barat","Jakarta Pusat","Jakarta Selatan","Jakarta Timur","Jakarta Utara","Kepulauan Seribu"],
+  "Jawa Barat":["Bandung","Bekasi","Bogor","Cimahi","Cirebon","Depok","Sukabumi","Tasikmalaya","Kabupaten Bandung","Bandung Barat","Kabupaten Bekasi","Kabupaten Bogor","Ciamis","Cianjur","Kabupaten Cirebon","Garut","Indramayu","Karawang","Kuningan","Majalengka","Pangandaran","Purwakarta","Subang","Kabupaten Sukabumi","Sumedang","Kabupaten Tasikmalaya","Ciawi","Cileungsi","Lembang","Padalarang","Serpong"],
+  "Jawa Tengah":["Magelang","Pekalongan","Salatiga","Semarang","Surakarta","Tegal","Banjarnegara","Banyumas","Batang","Blora","Boyolali","Brebes","Cilacap","Demak","Grobogan","Jepara","Karanganyar","Kebumen","Kendal","Klaten","Kudus","Kabupaten Magelang","Pati","Pemalang","Purbalingga","Purworejo","Rembang","Kabupaten Semarang","Sragen","Sukoharjo","Temanggung","Wonogiri","Wonosobo"],
+  "Jawa Timur":["Batu","Blitar","Kediri","Madiun","Malang","Mojokerto","Pasuruan","Probolinggo","Surabaya","Bangkalan","Banyuwangi","Bojonegoro","Bondowoso","Gresik","Jember","Jombang","Lamongan","Lumajang","Nganjuk","Ngawi","Pacitan","Pamekasan","Ponorogo","Sampang","Sidoarjo","Situbondo","Sumenep","Trenggalek","Tuban","Tulungagung"],
+  "DI Yogyakarta":["Yogyakarta","Bantul","Gunungkidul","Kulon Progo","Sleman"],
+  "Aceh":["Banda Aceh","Langsa","Lhokseumawe","Sabang","Subulussalam","Aceh Besar","Aceh Utara"],
+  "Bali":["Denpasar","Badung","Bangli","Buleleng","Gianyar","Jembrana","Karangasem","Klungkung","Tabanan"],
+  "Bengkulu":["Bengkulu","Bengkulu Selatan","Bengkulu Utara","Rejang Lebong"],
+  "Gorontalo":["Gorontalo","Boalemo","Bone Bolango"],
+  "Jambi":["Jambi","Sungai Penuh","Batanghari","Bungo","Kerinci","Merangin","Muaro Jambi","Sarolangun","Tebo"],
+  "Kalimantan Barat":["Pontianak","Singkawang","Bengkayang","Kapuas Hulu","Ketapang","Kubu Raya","Landak","Sambas","Sanggau","Sintang"],
+  "Kalimantan Selatan":["Banjarbaru","Banjarmasin","Banjar","Barito Kuala","Hulu Sungai Selatan","Kotabaru","Tabalong","Tanah Bumbu"],
+  "Kalimantan Tengah":["Palangka Raya","Barito Selatan","Barito Utara","Kotawaringin Barat","Kotawaringin Timur","Kapuas"],
+  "Kalimantan Timur":["Balikpapan","Bontang","Samarinda","Berau","Kutai Kartanegara","Kutai Timur","Paser"],
+  "Kalimantan Utara":["Tarakan","Bulungan","Malinau","Nunukan"],
+  "Kepulauan Bangka Belitung":["Pangkal Pinang","Bangka","Bangka Barat","Bangka Selatan","Bangka Tengah","Belitung"],
+  "Kepulauan Riau":["Batam","Tanjung Pinang","Bintan","Karimun","Natuna"],
+  "Lampung":["Bandar Lampung","Metro","Lampung Barat","Lampung Selatan","Lampung Tengah","Lampung Timur","Lampung Utara"],
+  "Maluku":["Ambon","Tual","Buru","Maluku Tengah","Maluku Tenggara","Seram Bagian Barat","Seram Bagian Timur"],
+  "Maluku Utara":["Ternate","Tidore Kepulauan","Halmahera Barat","Halmahera Selatan","Halmahera Utara"],
+  "Nusa Tenggara Barat":["Bima","Mataram","Dompu","Lombok Barat","Lombok Tengah","Lombok Timur","Lombok Utara","Sumbawa"],
+  "Nusa Tenggara Timur":["Kupang","Alor","Ende","Flores Timur","Manggarai","Manggarai Barat","Nagekeo","Ngada","Sikka","Sumba Timur"],
+  "Papua":["Jayapura","Keerom","Sarmi","Waropen"],
+  "Papua Barat":["Manokwari","Fakfak","Kaimana","Raja Ampat","Sorong"],
+  "Riau":["Dumai","Pekanbaru","Bengkalis","Kampar","Pelalawan","Rokan Hilir","Rokan Hulu","Siak"],
+  "Sulawesi Barat":["Majene","Mamasa","Mamuju","Polewali Mandar"],
+  "Sulawesi Selatan":["Makassar","Palopo","Parepare","Bantaeng","Barru","Bone","Bulukumba","Enrekang","Gowa","Maros","Pinrang","Sinjai","Soppeng","Takalar","Wajo"],
+  "Sulawesi Tengah":["Palu","Banggai","Buol","Donggala","Morowali","Poso","Toli-Toli"],
+  "Sulawesi Tenggara":["Bau-Bau","Kendari","Bombana","Buton","Kolaka","Konawe","Muna","Wakatobi"],
+  "Sulawesi Utara":["Bitung","Kotamobagu","Manado","Tomohon","Bolaang Mongondow","Kepulauan Sangihe","Kepulauan Talaud","Minahasa"],
+  "Sumatera Barat":["Bukittinggi","Padang","Padang Panjang","Pariaman","Payakumbuh","Sawahlunto","Solok","Agam","Dharmasraya","Lima Puluh Kota","Pasaman","Pesisir Selatan","Tanah Datar"],
+  "Sumatera Selatan":["Lubuklinggau","Pagar Alam","Palembang","Prabumulih","Banyuasin","Lahat","Muara Enim","Musi Banyuasin","Ogan Ilir","Ogan Komering Ilir","Ogan Komering Ulu"],
+  "Sumatera Utara":["Binjai","Gunungsitoli","Medan","Padangsidimpuan","Pematangsiantar","Sibolga","Tanjungbalai","Tebing Tinggi","Asahan","Deli Serdang","Karo","Langkat","Nias","Nias Selatan","Simalungun","Tapanuli Selatan","Tapanuli Tengah","Tapanuli Utara","Toba"],
+};
+
+// ════════════════════════════════════════════════════════════════
+// DUMMY DATA
+// ════════════════════════════════════════════════════════════════
+const DUMMY = [
+  {Kode:"SB-100001",Nama:"Dr. Rina Kusumawati",Kota:"Bogor",Provinsi:"Jawa Barat",Keahlian:"Medis",Detail:"Dokter Umum, Puskesmas Bogor Tengah",Kontak:"081234567890",Status:"Siap",Verified:"TRUE",Flags:"0"},
+  {Kode:"SB-100002",Nama:"Budi Santoso",Kota:"Cianjur",Provinsi:"Jawa Barat",Keahlian:"Logistik",Detail:"Pengemudi truk 10 tahun, siap evakuasi",Kontak:"082345678901",Status:"Siap",Verified:"TRUE",Flags:"0"},
+  {Kode:"SB-100003",Nama:"Sari Dewi",Kota:"Bandung",Provinsi:"Jawa Barat",Keahlian:"Psikologi",Detail:"Psikolog klinis, spesialis trauma bencana",Kontak:"083456789012",Status:"Siap",Verified:"FALSE",Flags:"0"},
+  {Kode:"SB-100004",Nama:"Ahmad Fauzi",Kota:"Jakarta Selatan",Provinsi:"DKI Jakarta",Keahlian:"Teknik",Detail:"Teknisi listrik PLN, siap perbaikan darurat",Kontak:"084567890123",Status:"Terbatas",Verified:"TRUE",Flags:"0"},
+  {Kode:"SB-100005",Nama:"Lestari Ningrum",Kota:"Bogor",Provinsi:"Jawa Barat",Keahlian:"Komunikasi",Detail:"Operator radio amatir ORARI",Kontak:"085678901234",Status:"Siap",Verified:"FALSE",Flags:"0"},
+  {Kode:"SB-100006",Nama:"Hendra Wijaya",Kota:"Depok",Provinsi:"Jawa Barat",Keahlian:"Medis",Detail:"Perawat IGD RS Universitas Indonesia",Kontak:"086789012345",Status:"Siap",Verified:"TRUE",Flags:"0"},
+  {Kode:"SB-100007",Nama:"Fitriani",Kota:"Sukabumi",Provinsi:"Jawa Barat",Keahlian:"Lainnya",Detail:"Koordinator dapur umum, bisa masak 200 porsi",Kontak:"087890123456",Status:"Siap",Verified:"FALSE",Flags:"0"},
+  {Kode:"SB-100008",Nama:"Ns. Dina Marlina",Kota:"Bekasi",Provinsi:"Jawa Barat",Keahlian:"Medis",Detail:"Bidan komunitas, spesialis ibu dan anak",Kontak:"089012345678",Status:"Siap",Verified:"TRUE",Flags:"0"},
+  {Kode:"SB-100009",Nama:"Yanuar Pratama",Kota:"Jakarta Timur",Provinsi:"DKI Jakarta",Keahlian:"Logistik",Detail:"Punya pickup double cabin, angkut 1 ton",Kontak:"081122334455",Status:"Siap",Verified:"FALSE",Flags:"0"},
+  {Kode:"SB-100010",Nama:"Citra Puspita",Kota:"Tangerang",Provinsi:"Banten",Keahlian:"Komunikasi",Detail:"Jurnalis lapangan, dokumentasi dan siaran darurat",Kontak:"082233445566",Status:"Siap",Verified:"TRUE",Flags:"0"},
+  {Kode:"SB-100011",Nama:"Pak Sutrisno",Kota:"Cianjur",Provinsi:"Jawa Barat",Keahlian:"Teknik",Detail:"Tukang bangunan 20 tahun, perbaikan cepat",Kontak:"083344556677",Status:"Siap",Verified:"FALSE",Flags:"0"},
+  {Kode:"SB-100012",Nama:"Dr. Agus Hermawan",Kota:"Garut",Provinsi:"Jawa Barat",Keahlian:"Medis",Detail:"Dokter spesialis bedah, siaga bencana",Kontak:"081344556677",Status:"Siap",Verified:"TRUE",Flags:"0"},
 ];
 
+// ════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════
 let allData = [];
+let userLat = null, userLng = null;
+let mapInstance = null, mapMarkers = [];
 let flagTarget = null;
+let lastKode = null;
 
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════════════
+function toTitleCase(s){return s.trim().replace(/\w\S*/g,w=>w[0].toUpperCase()+w.slice(1).toLowerCase());}
+function toNameCase(s){return s.trim().replace(/\w\S*/g,w=>w[0].toUpperCase()+w.slice(1));}
+function skillClass(sk){const m={Medis:'medis',Logistik:'logistik',Teknik:'teknik',Komunikasi:'komunikasi',Psikologi:'psikologi'};return m[sk]||'lainnya';}
+function skillEmoji(sk){const m={Medis:'🏥',Logistik:'🚛',Teknik:'🔧',Komunikasi:'📻',Psikologi:'🧠'};return(m[sk]||'🤝')+' '+sk;}
+function showToast(msg,type='default'){const t=document.getElementById('toast');const c={default:'#0D0D0D',success:'#1A7A4A',error:'#CC3300',warning:'#C47B00'};t.style.background=c[type]||c.default;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function animateNum(id,n){const el=document.getElementById(id);if(!el)return;let c=0;const step=Math.max(1,Math.ceil(n/40));const iv=setInterval(()=>{c=Math.min(c+step,n);el.textContent=c;if(c>=n)clearInterval(iv);},35);}
+
+// Hitung jarak 2 koordinat (Haversine formula, dalam km)
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371,dLat=(lat2-lat1)*Math.PI/180,dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+// Ambil koordinat kota
+function getKotaCoords(kota){return KOTA_COORDS[kota]||null;}
+
+// ════════════════════════════════════════════════════════════════
 // NAVIGATION
-// ═══════════════════════════════════════════════════════════
-function showSection(id) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('sec-' + id).classList.add('active');
-  const tabs = ['home','cari','daftar','tentang'];
-  document.querySelectorAll('.nav-tab')[tabs.indexOf(id)].classList.add('active');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (id === 'cari') loadData();
-  if (id === 'home') loadStats();
+// ════════════════════════════════════════════════════════════════
+function goTo(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  const tabs=['home','cari','daftar','tentang'];
+  const tabEls=document.querySelectorAll('.nav-tab');
+  if(tabs.indexOf(id)>=0) tabEls[tabs.indexOf(id)].classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(id==='cari')loadData();
+  if(id==='home')loadStats();
 }
 
-// ═══════════════════════════════════════════════════════════
-// JSONP HELPER — bypass CORS untuk GET dari GitHub Pages
-// ═══════════════════════════════════════════════════════════
-function fetchWithJSONP(url, onSuccess, onError) {
-  const cbName = 'cb_' + Date.now();
-  const script = document.createElement('script');
-  const timeout = setTimeout(() => {
-    cleanup();
-    if (onError) onError();
-  }, 8000);
+// ════════════════════════════════════════════════════════════════
+// AUTH NAV
+// ════════════════════════════════════════════════════════════════
+function updateNav(){
+  const s=JSON.parse(sessionStorage.getItem('sb_user')||'null');
+  const nl=document.getElementById('nav-login');
+  const nd=document.getElementById('nav-dashboard');
+  const nx=document.getElementById('nav-logout');
+  if(!s){nl.style.display='';nd.style.display='none';nx.style.display='none';return;}
+  nl.style.display='none';
+  nd.style.display='';
+  nd.textContent=s.role==='admin'?'⚙️ Admin':s.role==='koordinator'?'🗺️ Koordinator':'👤 '+(s.Nama||s.nama||'Dashboard');
+  nx.style.display='';
+}
+function doLogout(){sessionStorage.removeItem('sb_user');updateNav();showToast('Berhasil logout.','success');}
+function goToLogin(){window.location.href='login.html';}
 
-  window[cbName] = function(data) {
-    cleanup();
-    onSuccess(data);
-  };
-
-  function cleanup() {
-    clearTimeout(timeout);
-    delete window[cbName];
-    if (script.parentNode) script.parentNode.removeChild(script);
-  }
-
-  script.src = url + '&callback=' + cbName;
-  script.onerror = function() { cleanup(); if (onError) onError(); };
-  document.head.appendChild(script);
+// ════════════════════════════════════════════════════════════════
+// FETCH DATA (JSONP)
+// ════════════════════════════════════════════════════════════════
+function fetchJSONP(url,onSuccess,onError){
+  const cb='cb_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+  const sc=document.createElement('script');
+  const to=setTimeout(()=>{cleanup();if(onError)onError();},8000);
+  window[cb]=d=>{cleanup();onSuccess(d);};
+  function cleanup(){clearTimeout(to);delete window[cb];if(sc.parentNode)sc.parentNode.removeChild(sc);}
+  sc.src=url+'&callback='+cb;
+  sc.onerror=()=>{cleanup();if(onError)onError();};
+  document.head.appendChild(sc);
 }
 
-// ═══════════════════════════════════════════════════════════
+async function apiPost(payload){
+  return fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
+}
+
+// ════════════════════════════════════════════════════════════════
 // LOAD DATA
-// ═══════════════════════════════════════════════════════════
-async function loadData() {
-  document.getElementById('cards-container').innerHTML =
-    '<div class="loading"><div class="spinner"></div> Memuat data relawan...</div>';
+// ════════════════════════════════════════════════════════════════
+function loadData(){
+  document.getElementById('cards-container').innerHTML='<div class="loading"><div class="spinner"></div> Memuat data relawan...</div>';
+  if(USE_DUMMY){setTimeout(()=>{mergeAndRender(DUMMY);},600);return;}
+  fetchJSONP(API_URL+'?action=get',(res)=>{
+    const sheet=(res&&res.data)?res.data:[];
+    mergeAndRender(sheet);
+  },()=>{mergeAndRender(DUMMY);showToast('⚠️ Menggunakan data demo','warning');});
+}
 
-  if (USE_DUMMY) {
-    await new Promise(r => setTimeout(r, 800));
-    allData = DUMMY_DATA;
-    populateKotaFilter();
-    renderCards(allData);
+function mergeAndRender(sheetData){
+  if(sheetData.length>0){
+    const kontaks=new Set(sheetData.map(d=>d.Kontak));
+    allData=[...sheetData,...DUMMY.filter(d=>!kontaks.has(d.Kontak))];
+  } else {allData=DUMMY;}
+  populateKotaFilter();
+  renderCards(allData);
+}
+
+function loadStats(){
+  if(!allData.length){
+    if(USE_DUMMY){
+      allData=DUMMY;
+      animateNum('st-total',DUMMY.length);
+      animateNum('st-kota',new Set(DUMMY.map(d=>d.Kota)).size);
+      animateNum('st-verified',DUMMY.filter(d=>d.Verified==='TRUE').length);
+      return;
+    }
+    fetchJSONP(API_URL+'?action=get',(res)=>{
+      const d=(res&&res.data)?res.data:DUMMY;
+      animateNum('st-total',d.length);
+      animateNum('st-kota',new Set(d.map(x=>x.Kota)).size);
+      animateNum('st-verified',d.filter(x=>x.Verified==='TRUE').length);
+    },()=>{
+      animateNum('st-total',DUMMY.length);
+      animateNum('st-kota',new Set(DUMMY.map(d=>d.Kota)).size);
+      animateNum('st-verified',DUMMY.filter(d=>d.Verified==='TRUE').length);
+    });
     return;
   }
+  animateNum('st-total',allData.length);
+  animateNum('st-kota',new Set(allData.map(d=>d.Kota)).size);
+  animateNum('st-verified',allData.filter(d=>d.Verified==='TRUE').length);
+}
 
-  // Pakai JSONP untuk bypass CORS dari GitHub Pages
-  fetchWithJSONP(APPS_SCRIPT_URL + '?action=get', function(json) {
-    const sheetData = (json && json.data) ? json.data : [];
-    if (sheetData.length > 0) {
-      const sheetKontaks = new Set(sheetData.map(d => d.Kontak));
-      const filteredDummy = DUMMY_DATA.filter(d => !sheetKontaks.has(d.Kontak));
-      allData = [...sheetData, ...filteredDummy];
-    } else {
-      allData = DUMMY_DATA;
-    }
-    populateKotaFilter();
-    renderCards(allData);
-  }, function() {
-    // fallback jika gagal
-    allData = DUMMY_DATA;
-    populateKotaFilter();
-    renderCards(allData);
-    showToast('⚠️ Pakai data demo — backend belum terhubung');
+// ════════════════════════════════════════════════════════════════
+// FILTER
+// ════════════════════════════════════════════════════════════════
+function populateKotaFilter(){
+  const sel=document.getElementById('s-kota');
+  const kotas=[...new Set(allData.map(d=>d.Kota))].filter(Boolean).sort();
+  sel.innerHTML='<option value="">Semua Kota</option>';
+  kotas.forEach(k=>sel.innerHTML+=`<option value="${k}">${k}</option>`);
+}
+
+function doFilter(){
+  const nama=(document.getElementById('s-nama').value||'').toLowerCase().trim();
+  const kota=document.getElementById('s-kota').value;
+  const skill=document.getElementById('s-skill').value;
+  let filtered=allData.filter(d=>
+    (!nama||(d.Nama||'').toLowerCase().includes(nama)||(d.Keahlian||'').toLowerCase().includes(nama)||(d.Detail||'').toLowerCase().includes(nama)||(d.Kota||'').toLowerCase().includes(nama))&&
+    (!kota||d.Kota===kota)&&
+    (!skill||d.Keahlian===skill)
+  );
+  // Sort by distance if user location known
+  if(userLat!==null){
+    filtered=filtered.map(d=>{
+      const c=getKotaCoords(d.Kota);
+      const dist=c?haversine(userLat,userLng,c.lat,c.lng):9999;
+      return{...d,_dist:dist};
+    }).sort((a,b)=>a._dist-b._dist);
+  }
+  renderCards(filtered);
+  if(mapInstance)updateMap(filtered);
+}
+
+// ════════════════════════════════════════════════════════════════
+// RENDER CARDS
+// ════════════════════════════════════════════════════════════════
+function renderCards(data){
+  const cnt=document.getElementById('cards-container');
+  const rc=document.getElementById('result-count');
+  if(rc)rc.textContent=data.length+' relawan ditemukan'+(userLat?' · diurutkan berdasarkan jarak':'');
+  if(!data.length){
+    cnt.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><h3>Tidak ada relawan ditemukan</h3><p>Coba ubah filter pencarian</p></div>';
+    return;
+  }
+  cnt.innerHTML='<div class="cards-grid">'+data.map((d,i)=>{
+    const sc=skillClass(d.Keahlian);
+    const init=(d.Nama||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const isV=d.Verified==='TRUE';
+    const distStr=d._dist&&d._dist<9999?`<span class="dist-badge">📍 ${d._dist<1?'< 1':d._dist.toFixed(0)} km</span>`:'';
+    const statusColor=d.Status==='Siap'?'var(--green)':d.Status==='Terbatas'?'var(--amber)':'var(--grey)';
+    return`<div class="r-card" style="animation-delay:${i*.04}s">
+      <button class="flag-btn" title="Laporkan" onclick="openFlag('${d.Kode||i}')">🚩</button>
+      <div class="r-card-top">
+        <div class="r-avatar av-${sc}">${init}</div>
+        <span class="badge ${isV?'badge-verified':'badge-unverified'}">${isV?'✓ Terverifikasi':'⏳ Belum'}</span>
+      </div>
+      <div style="font-weight:700;font-size:.975rem;margin-bottom:4px">${d.Nama||'—'}${distStr}</div>
+      <span class="badge skill-${sc}" style="margin-bottom:.75rem;display:inline-block">${skillEmoji(d.Keahlian)}</span>
+      <div class="r-info">
+        ${d.Detail?`<div class="r-info-row">ℹ️ ${d.Detail}</div>`:''}
+        <div class="r-info-row">📍 ${d.Kota||'—'}, ${d.Provinsi||'—'}</div>
+        <div class="r-info-row" style="color:${statusColor};font-weight:500">⏱ ${d.Status||'—'}</div>
+      </div>
+      <div class="r-kontak">
+        <span class="r-phone">📞 ${d.Kontak||'—'}</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-red" style="padding:5px 10px;font-size:.78rem" onclick="window.open('tel:${d.Kontak}')">Hubungi</button>
+          <button class="btn btn-outline" style="padding:5px 10px;font-size:.78rem" onclick="bukaWA('${d.Kontak}','${d.Nama||''}')">WA</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+function bukaWA(kontak,nama){
+  window.open(`https://wa.me/62${kontak.replace(/^0/,'')}?text=${encodeURIComponent(`Halo ${nama}, saya menghubungi dari SiapBencana. Apakah Anda bisa dihubungi untuk situasi darurat?`)}`);
+}
+
+// ════════════════════════════════════════════════════════════════
+// PETA LEAFLET — FITUR RELAWAN TERDEKAT
+// ════════════════════════════════════════════════════════════════
+function initMap(centerLat,centerLng){
+  const mapEl=document.getElementById('relawan-map');
+  mapEl.style.display='block';
+  if(mapInstance){mapInstance.setView([centerLat,centerLng],10);return;}
+  mapInstance=L.map('relawan-map').setView([centerLat,centerLng],10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© <a href="https://openstreetmap.org">OpenStreetMap</a>',maxZoom:18
+  }).addTo(mapInstance);
+}
+
+function updateMap(data){
+  if(!mapInstance)return;
+  mapMarkers.forEach(m=>m.remove());
+  mapMarkers=[];
+  // Marker lokasi user
+  if(userLat!==null){
+    const userMarker=L.circleMarker([userLat,userLng],{color:'#D93025',fillColor:'#D93025',fillOpacity:.8,radius:10}).addTo(mapInstance);
+    userMarker.bindPopup('<strong>📍 Lokasi kamu</strong>').openPopup();
+    mapMarkers.push(userMarker);
+  }
+  // Marker relawan
+  data.forEach(d=>{
+    const c=getKotaCoords(d.Kota);
+    if(!c)return;
+    const color=d.Status==='Siap'?'#1A7A4A':'#C47B00';
+    const m=L.circleMarker([c.lat,c.lng],{color,fillColor:color,fillOpacity:.7,radius:8}).addTo(mapInstance);
+    const dist=userLat?`<br>📍 ${haversine(userLat,userLng,c.lat,c.lng).toFixed(1)} km dari kamu`:'';
+    m.bindPopup(`<strong>${d.Nama}</strong><br>${skillEmoji(d.Keahlian)}<br>📞 ${d.Kontak}${dist}`);
+    mapMarkers.push(m);
   });
 }
 
-async function loadStats() {
-  let data = allData;
-  if (!data.length) {
-    if (USE_DUMMY) data = DUMMY_DATA;
-    else {
-      await new Promise(resolve => {
-        fetchWithJSONP(APPS_SCRIPT_URL + '?action=get', function(json) {
-          data = (json && json.data && json.data.length) ? json.data : DUMMY_DATA;
-          resolve();
-        }, function() { data = DUMMY_DATA; resolve(); });
-      });
-    }
-  }
-  const kota = new Set(data.map(d => d.Kota)).size;
-  const verified = data.filter(d => d.Verified === 'TRUE').length;
-  animateNum('stat-total', data.length);
-  animateNum('stat-kota', kota);
-  animateNum('stat-verified', verified);
+function cariTerdekat(){
+  if(!navigator.geolocation){showToast('Browser tidak mendukung GPS.','error');return;}
+  showToast('📍 Mendeteksi lokasi kamu...','default');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    userLat=pos.coords.latitude;
+    userLng=pos.coords.longitude;
+    document.getElementById('reset-loc').style.display='';
+    showToast('✅ Lokasi terdeteksi! Relawan diurutkan berdasarkan jarak.','success');
+    initMap(userLat,userLng);
+    doFilter();
+  },err=>{
+    showToast('Gagal deteksi lokasi. Izinkan akses GPS di browser.','error');
+  });
 }
 
-function animateNum(id, target) {
-  let curr = 0;
-  const el = document.getElementById(id);
-  const step = Math.ceil(target / 30);
-  const iv = setInterval(() => {
-    curr = Math.min(curr + step, target);
-    el.textContent = curr;
-    if (curr >= target) clearInterval(iv);
-  }, 40);
+function resetLokasi(){
+  userLat=null;userLng=null;
+  document.getElementById('reset-loc').style.display='none';
+  document.getElementById('relawan-map').style.display='none';
+  if(mapInstance){mapInstance.remove();mapInstance=null;mapMarkers=[];}
+  doFilter();
+  showToast('Lokasi direset.','default');
 }
 
-// ═══════════════════════════════════════════════════════════
-// RENDER CARDS
-// ═══════════════════════════════════════════════════════════
-function populateKotaFilter() {
-  const kotas = [...new Set(allData.map(d => d.Kota))].filter(Boolean).sort();
-  const sel = document.getElementById('filter-kota');
-  sel.innerHTML = '<option value="">Semua Kota</option>';
-  kotas.forEach(k => sel.innerHTML += `<option value="${k}">${k}</option>`);
+// ════════════════════════════════════════════════════════════════
+// DAFTAR FORM
+// ════════════════════════════════════════════════════════════════
+function updateKota(){
+  const prov=document.getElementById('f-provinsi').value;
+  const sel=document.getElementById('f-kota');
+  sel.innerHTML='<option value="">Pilih kota...</option>';
+  if(prov&&KOTA_DATA[prov]){
+    KOTA_DATA[prov].sort().forEach(k=>sel.innerHTML+=`<option value="${k}">${k}</option>`);
+    sel.disabled=false;
+  } else {sel.innerHTML='<option value="">Pilih provinsi dulu...</option>';sel.disabled=true;}
 }
 
-function skillClass(skill) {
-  const map = { Medis:'medis', Logistik:'logistik', Teknik:'teknik', Komunikasi:'komunikasi', Psikologi:'psikologi' };
-  return map[skill] || 'lainnya';
-}
-
-function skillEmoji(skill) {
-  const map = { Medis:'🏥', Logistik:'🚛', Teknik:'🔧', Komunikasi:'📻', Psikologi:'🧠' };
-  return (map[skill] || '🤝') + ' ' + skill;
-}
-
-function renderCards(data) {
-  const container = document.getElementById('cards-container');
-  if (!data.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><h3>Tidak ada relawan ditemukan</h3><p>Coba ubah filter pencarian kamu</p></div>`;
-    return;
-  }
-  container.innerHTML = `<div style="font-size:0.85rem;color:var(--grey);margin-bottom:1rem">${data.length} relawan ditemukan</div><div class="cards-grid">` +
-    data.map((d, i) => {
-      const sc = skillClass(d.Keahlian);
-      const displayNama = d.Nama;
-      const displayKota = d.Kota;
-      const displayProvinsi = d.Provinsi;
-      const initials = displayNama.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-      const isVerified = d.Verified === 'TRUE';
-      return `<div class="relawan-card" style="animation-delay:${i*0.04}s">
-        <button class="flag-btn" title="Laporkan data ini" onclick="openFlag(${i})">🚩</button>
-        <div class="card-top">
-          <div class="card-avatar avatar-${sc}">${initials}</div>
-          <span class="badge-verify ${isVerified ? 'badge-verified' : 'badge-unverified'}">
-            ${isVerified ? '✓ Terverifikasi' : '⏳ Belum diverifikasi'}
-          </span>
-        </div>
-        <div class="card-name">${displayNama}</div>
-        <span class="card-skill skill-${sc}">${skillEmoji(d.Keahlian)}</span>
-        <div class="card-info">
-          ${d.Detail ? `<div class="card-info-row"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>${d.Detail}</div>` : ''}
-          <div class="card-info-row"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>${displayKota}, ${displayProvinsi}</div>
-          <div class="card-info-row" style="color:${d.Status==='Siap'?'var(--green)':d.Status==='Terbatas'?'var(--amber)':'var(--grey)'}">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
-            ${d.Status}
-          </div>
-        </div>
-        <div class="card-kontak">
-          <span class="kontak-num">📞 ${d.Kontak}</span>
-          <button class="btn-kontak" onclick="window.open('tel:${d.Kontak}')">Hubungi</button>
-        </div>
-      </div>`;
-    }).join('') + '</div>';
-}
-
-// ═══════════════════════════════════════════════════════════
-// FILTER
-// ═══════════════════════════════════════════════════════════
-function filterCards() {
-  const nama = document.getElementById('search-nama').value.toLowerCase().trim();
-  const kota = document.getElementById('filter-kota').value.toLowerCase().trim();
-  const skill = document.getElementById('filter-skill').value;
-  const filtered = allData.filter(d =>
-    (!nama ||
-      (d.Nama||'').toLowerCase().includes(nama) ||
-      (d.Detail||'').toLowerCase().includes(nama) ||
-      (d.Keahlian||'').toLowerCase().includes(nama) ||
-      (d.Kota||'').toLowerCase().includes(nama)
-    ) &&
-    (!kota || (d.Kota||'').toLowerCase() === kota) &&
-    (!skill || d.Keahlian === skill)
-  );
-  renderCards(filtered);
-}
-
-// ═══════════════════════════════════════════════════════════
-// DATA KOTA PER PROVINSI
-// ═══════════════════════════════════════════════════════════
-const KOTA_DATA = {
-  "Jabodetabek": ["Jakarta Pusat","Jakarta Selatan","Jakarta Barat","Jakarta Timur","Jakarta Utara","Bogor","Depok","Tangerang","Tangerang Selatan","Bekasi","Kabupaten Bogor","Kabupaten Tangerang","Kabupaten Bekasi","Cibinong","Cileungsi","Gunung Putri","Ciawi","Lembang","Sentul","Citeureup","Parung","Serpong","Serpong Utara","Pamulang","Ciputat","Ciputat Timur","Pondok Aren","Larangan","Ciledug","Karawaci","Cibodas","Periuk","Jatiuwung","Neglasari","Batuceper","Benda","Pinang","Tigaraksa","Cengkareng","Kebayoran Baru","Kebayoran Lama","Cileunyi","Buahbatu","Margahayu","Rancaekek","Soreang","Padalarang","Jonggol","Bojonggede"],
-  "Aceh": ["Banda Aceh","Langsa","Lhokseumawe","Sabang","Subulussalam","Aceh Barat","Aceh Barat Daya","Aceh Besar","Aceh Jaya","Aceh Selatan","Aceh Singkil","Aceh Tamiang","Aceh Tengah","Aceh Tenggara","Aceh Timur","Aceh Utara","Bener Meriah","Bireuen","Gayo Lues","Nagan Raya","Pidie","Pidie Jaya","Simeulue"],
-  "Bali": ["Denpasar","Badung","Bangli","Buleleng","Gianyar","Jembrana","Karangasem","Klungkung","Tabanan"],
-  "Banten": ["Cilegon","Serang","Tangerang","Tangerang Selatan","Lebak","Pandeglang","Kabupaten Tangerang","Kabupaten Serang","Serpong","Serpong Utara","Ciputat","Ciputat Timur","Pamulang","Pondok Aren","Larangan","Ciledug","Karawaci","Cibodas","Periuk","Jatiuwung","Pinang","Neglasari","Batuceper","Benda","Tigaraksa","Rajeg","Pasar Kemis"],
-  "Bengkulu": ["Bengkulu","Bengkulu Selatan","Bengkulu Tengah","Bengkulu Utara","Kaur","Kepahiang","Lebong","Muko Muko","Rejang Lebong","Seluma"],
-  "DI Yogyakarta": ["Yogyakarta","Bantul","Gunungkidul","Kulon Progo","Sleman"],
-  "DKI Jakarta": ["Jakarta Barat","Jakarta Pusat","Jakarta Selatan","Jakarta Timur","Jakarta Utara","Kepulauan Seribu","Cengkareng","Grogol Petamburan","Tambora","Taman Sari","Penjaringan","Pademangan","Pluit","Kebayoran Baru","Kebayoran Lama","Pesanggrahan","Cilandak","Pasar Minggu","Jagakarsa","Mampang Prapatan","Pancoran","Tebet","Setiabudi","Matraman","Jatinegara","Kramat Jati","Pasar Rebo","Ciracas","Cipayung","Duren Sawit","Cakung","Pulo Gadung","Kelapa Gading","Tanjung Priok","Koja","Cilincing","Penjaringan","Gambir","Sawah Besar","Kemayoran","Senen","Cempaka Putih","Johar Baru","Menteng","Tanah Abang","Palmerah","Kebon Jeruk","Kembangan","Kalideres"],
-  "Gorontalo": ["Gorontalo","Boalemo","Bone Bolango","Gorontalo (Kab)","Gorontalo Utara","Pohuwato"],
-  "Jambi": ["Jambi","Sungai Penuh","Batanghari","Bungo","Kerinci","Merangin","Muaro Jambi","Sarolangun","Tanjung Jabung Barat","Tanjung Jabung Timur","Tebo"],
-  "Jawa Barat": ["Bandung","Bekasi","Bogor","Cimahi","Cirebon","Depok","Sukabumi","Tasikmalaya","Kabupaten Bandung","Bandung Barat","Kabupaten Bekasi","Kabupaten Bogor","Ciamis","Cianjur","Kabupaten Cirebon","Garut","Indramayu","Karawang","Kuningan","Majalengka","Pangandaran","Purwakarta","Subang","Kabupaten Sukabumi","Sumedang","Kabupaten Tasikmalaya","Cileunyi","Rancaekek","Soreang","Margahayu","Margahurip","Cimindi","Cibiru","Antapani","Arcamanik","Buahbatu","Cijawura","Gedebage","Kiaracondong","Lengkong","Mandalajati","Panyileukan","Rancasari","Regol","Cicendo","Cidadap","Coblong","Sukajadi","Sukasari","Sumur Bandung","Ujungberung","Lembang","Padalarang","Cileungsi","Gunung Putri","Jonggol","Cibinong","Bojonggede","Parung","Ciawi","Cisarua","Caringin","Cigombong","Dramaga","Kemang","Rancabungur","Tajurhalang","Ciomas","Tamansari","Citeureup","Sukaraja","Babakan Madang"],
-  "Jawa Tengah": ["Magelang","Pekalongan","Salatiga","Semarang","Surakarta","Tegal","Banjarnegara","Banyumas","Batang","Blora","Boyolali","Brebes","Cilacap","Demak","Grobogan","Jepara","Karanganyar","Kebumen","Kendal","Klaten","Kudus","Kabupaten Magelang","Pati","Kabupaten Pekalongan","Pemalang","Purbalingga","Purworejo","Rembang","Kabupaten Semarang","Sragen","Sukoharjo","Kabupaten Tegal","Temanggung","Wonogiri","Wonosobo","Banyumanik","Candisari","Gajahmungkur","Gayamsari","Genuk","Gunungpati","Mijen","Ngaliyan","Pedurungan","Semarang Barat","Semarang Selatan","Semarang Tengah","Semarang Timur","Semarang Utara","Tembalang","Tugu","Banjarsari","Jebres","Laweyan","Pasar Kliwon","Serengan","Purwokerto","Cilongok","Sokaraja","Ajibarang"],
-  "Jawa Timur": ["Batu","Blitar","Kediri","Madiun","Malang","Mojokerto","Pasuruan","Probolinggo","Surabaya","Bangkalan","Banyuwangi","Blitar (Kab)","Bojonegoro","Bondowoso","Gresik","Jember","Jombang","Kediri (Kab)","Lamongan","Lumajang","Madiun (Kab)","Magetan","Malang (Kab)","Mojokerto (Kab)","Nganjuk","Ngawi","Pacitan","Pamekasan","Pasuruan (Kab)","Ponorogo","Probolinggo (Kab)","Sampang","Sidoarjo","Situbondo","Sumenep","Trenggalek","Tuban","Tulungagung"],
-  "Jawa Timur (Tambahan)": ["Surabaya Barat","Surabaya Timur","Surabaya Selatan","Surabaya Utara","Surabaya Pusat","Benowo","Bubutan","Bulak","Dukuh Pakis","Gayungan","Genteng","Gubeng","Gunung Anyar","Jambangan","Karang Pilang","Kenjeran","Krembangan","Lakarsantri","Mulyorejo","Pabean Cantikan","Pakal","Rungkut","Sambikerep","Sawahan","Semampir","Simokerto","Sukomanunggal","Sukolilo","Tambaksari","Tandes","Tegalsari","Tenggilis Mejoyo","Wiyung","Wonocolo","Wonokromo","Lowokwaru","Blimbing","Kedungkandang","Sukun","Klojen"],
-  "Kalimantan Barat": ["Pontianak","Singkawang","Bengkayang","Kapuas Hulu","Kayong Utara","Ketapang","Kubu Raya","Landak","Melawi","Mempawah","Sambas","Sanggau","Sekadau","Sintang"],
-  "Kalimantan Selatan": ["Banjarbaru","Banjarmasin","Balangan","Banjar","Barito Kuala","Hulu Sungai Selatan","Hulu Sungai Tengah","Hulu Sungai Utara","Kotabaru","Tabalong","Tanah Bumbu","Tanah Laut","Tapin"],
-  "Kalimantan Tengah": ["Palangka Raya","Barito Selatan","Barito Timur","Barito Utara","Gunung Mas","Kapuas","Katingan","Kotawaringin Barat","Kotawaringin Timur","Lamandau","Murung Raya","Pulang Pisau","Seruyan","Sukamara"],
-  "Kalimantan Timur": ["Balikpapan","Bontang","Samarinda","Berau","Kutai Barat","Kutai Kartanegara","Kutai Timur","Mahakam Ulu","Paser","Penajam Paser Utara"],
-  "Kalimantan Utara": ["Tarakan","Bulungan","Malinau","Nunukan","Tana Tidung"],
-  "Kepulauan Bangka Belitung": ["Pangkal Pinang","Bangka","Bangka Barat","Bangka Selatan","Bangka Tengah","Belitung","Belitung Timur"],
-  "Kepulauan Riau": ["Batam","Tanjung Pinang","Bintan","Karimun","Kepulauan Anambas","Lingga","Natuna","Batam Kota","Batu Ampar","Lubuk Baja","Nongsa","Sagulung","Sekupang","Bengkong","Batuaji","Sungai Beduk","Galang","Belakang Padang"],
-  "Lampung": ["Bandar Lampung","Metro","Lampung Barat","Lampung Selatan","Lampung Tengah","Lampung Timur","Lampung Utara","Mesuji","Pesawaran","Pesisir Barat","Pringsewu","Tanggamus","Tulang Bawang","Tulang Bawang Barat","Way Kanan"],
-  "Maluku": ["Ambon","Tual","Buru","Buru Selatan","Kepulauan Aru","Maluku Barat Daya","Maluku Tengah","Maluku Tenggara","Maluku Tenggara Barat","Seram Bagian Barat","Seram Bagian Timur"],
-  "Maluku Utara": ["Ternate","Tidore Kepulauan","Halmahera Barat","Halmahera Selatan","Halmahera Tengah","Halmahera Timur","Halmahera Utara","Kepulauan Sula","Pulau Morotai","Pulau Taliabu"],
-  "Nusa Tenggara Barat": ["Bima","Mataram","Bima (Kab)","Dompu","Lombok Barat","Lombok Tengah","Lombok Timur","Lombok Utara","Sumbawa","Sumbawa Barat"],
-  "Nusa Tenggara Timur": ["Kupang","Alor","Belu","Ende","Flores Timur","Kupang (Kab)","Lembata","Malaka","Manggarai","Manggarai Barat","Manggarai Timur","Nagekeo","Ngada","Rote Ndao","Sabu Raijua","Sikka","Sumba Barat","Sumba Barat Daya","Sumba Tengah","Sumba Timur","Timor Tengah Selatan","Timor Tengah Utara"],
-  "Papua": ["Jayapura","Jayapura (Kab)","Keerom","Mamberamo Raya","Sarmi","Supiori","Waropen","Kepulauan Yapen"],
-  "Papua Barat": ["Manokwari","Fakfak","Kaimana","Manokwari Selatan","Maybrat","Pegunungan Arfak","Raja Ampat","Sorong","Sorong (Kab)","Sorong Selatan","Tambrauw","Teluk Bintuni","Teluk Wondama"],
-  "Papua Barat Daya": ["Sorong (Kota)","Maybrat","Raja Ampat","Sorong (Kab)","Sorong Selatan","Tambrauw"],
-  "Papua Pegunungan": ["Jayawijaya","Lanny Jaya","Mamberamo Tengah","Nduga","Pegunungan Bintang","Tolikara","Yahukimo","Yalimo"],
-  "Papua Selatan": ["Merauke","Asmat","Boven Digoel","Mappi"],
-  "Papua Tengah": ["Nabire","Deiyai","Dogiyai","Intan Jaya","Mimika","Paniai","Puncak","Puncak Jaya"],
-  "Riau": ["Dumai","Pekanbaru","Bengkalis","Indragiri Hilir","Indragiri Hulu","Kampar","Kepulauan Meranti","Kuantan Singingi","Pelalawan","Rokan Hilir","Rokan Hulu","Siak"],
-  "Sulawesi Barat": ["Majene","Mamasa","Mamuju","Mamuju Tengah","Pasangkayu","Polewali Mandar"],
-  "Sulawesi Selatan": ["Makassar","Palopo","Parepare","Bantaeng","Barru","Bone","Bulukumba","Enrekang","Gowa","Jeneponto","Kepulauan Selayar","Luwu","Luwu Timur","Luwu Utara","Maros","Pangkajene dan Kepulauan","Pinrang","Sidenreng Rappang","Sinjai","Soppeng","Takalar","Tana Toraja","Toraja Utara","Wajo"],
-  "Sulawesi Tengah": ["Palu","Banggai","Banggai Kepulauan","Banggai Laut","Buol","Donggala","Morowali","Morowali Utara","Parigi Moutong","Poso","Sigi","Tojo Una-Una","Toli-Toli"],
-  "Sulawesi Tenggara": ["Bau-Bau","Kendari","Bombana","Buton","Buton Selatan","Buton Tengah","Buton Utara","Kolaka","Kolaka Timur","Kolaka Utara","Konawe","Konawe Kepulauan","Konawe Selatan","Konawe Utara","Muna","Muna Barat","Wakatobi"],
-  "Sulawesi Utara": ["Bitung","Kotamobagu","Manado","Tomohon","Bolaang Mongondow","Bolaang Mongondow Selatan","Bolaang Mongondow Timur","Bolaang Mongondow Utara","Kepulauan Sangihe","Kepulauan Siau Tagulandang Biaro","Kepulauan Talaud","Minahasa","Minahasa Selatan","Minahasa Tenggara","Minahasa Utara"],
-  "Sumatera Barat": ["Bukittinggi","Padang","Padang Panjang","Pariaman","Payakumbuh","Sawahlunto","Solok","Agam","Dharmasraya","Kepulauan Mentawai","Lima Puluh Kota","Padang Pariaman","Pasaman","Pasaman Barat","Pesisir Selatan","Sijunjung","Solok (Kab)","Solok Selatan","Tanah Datar"],
-  "Sumatera Selatan": ["Lubuklinggau","Pagar Alam","Palembang","Prabumulih","Banyuasin","Empat Lawang","Lahat","Muara Enim","Musi Banyuasin","Musi Rawas","Musi Rawas Utara","Ogan Ilir","Ogan Komering Ilir","Ogan Komering Ulu","Ogan Komering Ulu Selatan","Ogan Komering Ulu Timur","Penukal Abab Lematang Ilir"],
-  "Sumatera Utara": ["Binjai","Gunungsitoli","Medan","Padangsidimpuan","Pematangsiantar","Sibolga","Tanjungbalai","Tebing Tinggi","Asahan","Batu Bara","Dairi","Deli Serdang","Humbang Hasundutan","Karo","Labuhanbatu","Labuhanbatu Selatan","Labuhanbatu Utara","Langkat","Mandailing Natal","Nias","Nias Barat","Nias Selatan","Nias Utara","Padang Lawas","Padang Lawas Utara","Pakpak Bharat","Samosir","Serdang Bedagai","Simalungun","Tapanuli Selatan","Tapanuli Tengah","Tapanuli Utara","Toba"]
-};
-
-function updateKotaOptions() {
-  const provinsi = document.getElementById('f-provinsi').value;
-  const kotaSel = document.getElementById('f-kota');
-  kotaSel.innerHTML = '<option value="">Pilih kota/kabupaten...</option>';
-  if (provinsi && KOTA_DATA[provinsi]) {
-    KOTA_DATA[provinsi].sort().forEach(k => {
-      kotaSel.innerHTML += `<option value="${k}">${k}</option>`;
-    });
-    kotaSel.disabled = false;
-  } else {
-    kotaSel.innerHTML = '<option value="">Pilih provinsi dulu...</option>';
-    kotaSel.disabled = true;
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// HELPER — Capitalize setiap kata (untuk kota & provinsi)
-// ═══════════════════════════════════════════════════════════
-function toTitleCase(str) {
-  return str.trim().replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-}
-function toNameCase(str) {
-  return str.trim().replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1));
-}
-
-// ═══════════════════════════════════════════════════════════
-// SUBMIT FORM
-// ═══════════════════════════════════════════════════════════
-async function submitForm(e) {
+async function submitDaftar(e){
   e.preventDefault();
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner" style="border-top-color:white;width:16px;height:16px"></div> Menyimpan...';
+  const btn=document.getElementById('daftar-btn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spinner" style="width:16px;height:16px;border-top-color:white"></div> Menyimpan...';
 
-  const payload = {
-    action: 'add',
-    Nama: toNameCase(document.getElementById('f-nama').value),
-    Kota: document.getElementById('f-kota').value,
-    Provinsi: document.getElementById('f-provinsi').value,
-    Keahlian: document.getElementById('f-skill').value,
-    Detail: document.getElementById('f-detail').value.trim(),
-    Kontak: document.getElementById('f-kontak').value.trim(),
-    Status: document.getElementById('f-status').value,
+  // Generate kode di frontend — tidak bergantung response server
+  const kode='SB-'+Math.floor(100000+Math.random()*900000);
+
+  const payload={
+    action:'add',
+    Kode:kode,
+    Nama:toNameCase(document.getElementById('f-nama').value),
+    Kota:document.getElementById('f-kota').value,
+    Provinsi:document.getElementById('f-provinsi').value,
+    Keahlian:document.getElementById('f-skill').value,
+    Detail:document.getElementById('f-detail').value.trim(),
+    Kontak:document.getElementById('f-kontak').value.trim(),
+    Status:document.getElementById('f-status').value,
   };
 
-  if (USE_DUMMY) {
-    await new Promise(r => setTimeout(r, 900));
-    allData.push({ ...payload, Verified: 'FALSE', Flags: '0' });
-    populateKotaFilter();
-    showSuccess();
+  if(USE_DUMMY){
+    await new Promise(r=>setTimeout(r,900));
+    allData.push({...payload,Verified:'FALSE',Flags:'0'});
+    showSuccess(kode);
     return;
   }
 
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      mode: 'no-cors'
-    });
-    showSuccess();
-  } catch(err) {
-    showToast('❌ Gagal menyimpan data. Coba lagi.');
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg> Daftarkan Sekarang';
+  try{
+    await apiPost(payload);
+    // Kode sudah digenerate di frontend, langsung tampilkan
+    showSuccess(kode);
+  } catch{
+    showToast('❌ Gagal menyimpan. Coba lagi.','error');
+    btn.disabled=false;
+    btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg> Daftarkan Sekarang';
   }
 }
 
-function showSuccess() {
-  document.getElementById('form-area').style.display = 'none';
-  document.getElementById('success-area').style.display = 'block';
+function showSuccess(kode){
+  document.getElementById('form-area').style.display='none';
+  document.getElementById('success-area').style.display='block';
+  document.getElementById('kode-display').textContent=kode;
 }
 
-function resetForm() {
+function resetDaftar(){
   document.getElementById('reg-form').reset();
-  document.getElementById('form-area').style.display = 'block';
-  document.getElementById('success-area').style.display = 'none';
-  const btn = document.getElementById('submit-btn');
-  btn.disabled = false;
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg> Daftarkan Sekarang';
+  document.getElementById('f-kota').disabled=true;
+  document.getElementById('form-area').style.display='block';
+  document.getElementById('success-area').style.display='none';
+  const btn=document.getElementById('daftar-btn');
+  btn.disabled=false;
+  btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg> Daftarkan Sekarang';
 }
 
-// ═══════════════════════════════════════════════════════════
-// FLAG SYSTEM
-// ═══════════════════════════════════════════════════════════
-function openFlag(idx) { flagTarget = idx; document.getElementById('flag-modal').classList.add('open'); }
-function closeFlag() { flagTarget = null; document.getElementById('flag-modal').classList.remove('open'); }
-function confirmFlag() {
-  if (flagTarget !== null && allData[flagTarget]) {
-    allData[flagTarget].Flags = String(parseInt(allData[flagTarget].Flags || '0') + 1);
+// ════════════════════════════════════════════════════════════════
+// FLAG
+// ════════════════════════════════════════════════════════════════
+function openFlag(kode){flagTarget=kode;document.getElementById('modal-flag').classList.add('open');}
+function closeFlag(){flagTarget=null;document.getElementById('modal-flag').classList.remove('open');}
+function confirmFlag(){
+  if(flagTarget){
+    const d=allData.find(x=>x.Kode===flagTarget);
+    if(d)d.Flags=String(parseInt(d.Flags||'0')+1);
+    if(!USE_DUMMY)apiPost({action:'flag',kode:flagTarget}).catch(()=>{});
   }
   closeFlag();
-  showToast('🚩 Laporan terkirim. Terima kasih!');
+  showToast('🚩 Laporan terkirim. Terima kasih!','default');
 }
 
-// ═══════════════════════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════════════════════
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+// ════════════════════════════════════════════════════════════════
+// ROADMAP: WA NOTIF SKELETON (butuh Fonnte/Twilio API key)
+// ════════════════════════════════════════════════════════════════
+function simulasiWA(){
+  const msg=document.getElementById('wa-msg').value||'Situasi darurat';
+  showToast('📱 [Simulasi] WA terkirim ke relawan terdekat: "'+msg.slice(0,30)+'"','success');
+  document.getElementById('modal-wa').classList.remove('open');
+  /* AKTIFKAN INI SAAT API KEY TERSEDIA:
+  const FONNTE_TOKEN = 'YOUR_FONNTE_TOKEN';
+  fetch('https://api.fonnte.com/send', {
+    method: 'POST',
+    headers: {'Authorization': FONNTE_TOKEN},
+    body: JSON.stringify({target: '628xxx', message: msg})
+  });
+  */
 }
 
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 // INIT
-// ═══════════════════════════════════════════════════════════
-function goToCari() {
-  showSection('cari');
-  // data sudah ada di allData, langsung render
-  renderCards(allData);
-  filterCards();
-}
-
+// ════════════════════════════════════════════════════════════════
+updateNav();
 loadStats();
-
-// Update nav setelah load
-if (typeof updateNav === 'function') updateNav();
-</script>
-<script src="assets/js/utils.js"></script>
-<script src="assets/js/auth.js"></script>
-<script>
-// Cek session untuk update nav
-document.addEventListener('DOMContentLoaded', function() {
-  if (typeof updateNav === 'function') updateNav();
-});
 </script>
 </body>
 </html>

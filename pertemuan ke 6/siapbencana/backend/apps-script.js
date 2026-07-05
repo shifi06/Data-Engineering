@@ -97,7 +97,8 @@ function doPost(e) {
     const action  = payload.action;
 
     if (action === 'add') {
-      const kode = 'SB-' + Math.floor(100000 + Math.random() * 900000);
+      // Kode digenerate di frontend dan dikirim bersama payload
+      const kode = payload.Kode || ('SB-' + Math.floor(100000 + Math.random() * 900000));
       const sheet = getSheet(SHEET_RELAWAN);
       sheet.appendRow([
         new Date().toISOString(), kode,
